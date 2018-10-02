@@ -5,9 +5,7 @@
 #include <ESP8266WiFi.h>
 #include <stdlib.h>
 #define ssid "WiFi"   
-#define pass "10072003WiFi"   
-//#define ssid "Zevs"   
-//#define pass "R667fksX55fr"   
+#define pass "10072003WiFi"    
 #define mqtt_server "m21.cloudmqtt.com"
 #define mqtt_port 19787 
 #define mqtt_user "udciowys"
