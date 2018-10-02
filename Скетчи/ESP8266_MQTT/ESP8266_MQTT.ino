@@ -27,12 +27,13 @@ Serial.println();
 }
 void SendEsp()
 { 
-  if(Serial.read() == 1 ){
-  if(Serial.read() == 2 ){float Temp = Serial.parseFloat(); client.publish("Incubator/Temp",String(Temp));Serial.println(Temp);Serial.println("OK");
-  if(Serial.read() == 3 ){float ControlTemp = Serial.parseFloat(); client.publish("Incubator/ControlTemp",String(ControlTemp));Serial.println(ControlTemp);Serial.println("OK");
-  if(Serial.read() == 4  ){int Hum = Serial.parseInt(); client.publish("Incubator/Hum",String(Hum));Serial.println(Hum);Serial.println("OK");
-  if(Serial.read() == 5 ){int ControlHum = Serial.parseInt(); client.publish("Incubator/ControlHum",String(ControlHum));Serial.println(ControlHum);Serial.println("OK");
-  if(Serial.read() == 10  ){int Day = Serial.parseInt(); client.publish("Incubator/Day",String(Day));Serial.println(Day);Serial.println("OK");}}}}}}}
+  
+  if(Serial.parseInt() == 1 ){
+  if(Serial.parseInt() == 2 ){float Temp = Serial.parseFloat(); client.publish("Incubator/Temp",String(Temp));Serial.println(Temp);Serial.println("OK");
+  if(Serial.parseInt() == 3 ){float ControlTemp = Serial.parseFloat(); client.publish("Incubator/ControlTemp",String(ControlTemp));Serial.println(ControlTemp);Serial.println("OK");
+  if(Serial.parseInt() == 4  ){int Hum = Serial.parseInt(); client.publish("Incubator/Hum",String(Hum));Serial.println(Hum);Serial.println("OK");
+  if(Serial.parseInt() == 5 ){int ControlHum = Serial.parseInt(); client.publish("Incubator/ControlHum",String(ControlHum));Serial.println(ControlHum);Serial.println("OK");
+  if(Serial.parseInt() == 10  ){int Day = Serial.parseInt(); client.publish("Incubator/Day",String(Day));Serial.println(Day);Serial.println("OK");}}}}}}}
   
 void loop() {
 if (WiFi.status() != WL_CONNECTED) {  //wifi not connected?
