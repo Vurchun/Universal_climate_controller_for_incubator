@@ -568,15 +568,15 @@ void Esp()
 {
 Serial.println("Start"); //EspStart
  lcd.setCursor(18, 3); lcd.print("\8");       
-  Serial.println("Temp");  Serial.println(Tnow); 
-  if(Serial.read() == "OK"){   
-  Serial.println("ControlTemp"); Serial.println(TempIncubations);
+  Serial.println("001");  Serial.println(Tnow);                        //Temp == 001
+  if(Serial.read() == "OK"){    
+  Serial.println("002"); Serial.println(TempIncubations);       //TempIncubationsp == 002
   if(Serial.read() == "OK"){
-   Serial.println("Hum");  Serial.println(hum);      
+   Serial.println("001");  Serial.println(hum);                         //hum == 003
    if(Serial.read() == "OK"){
-   Serial.println("ControlHum");  Serial.println(HumiditiIncubation); 
+   Serial.println("004");  Serial.println(HumiditiIncubation);   //HumiditiIncubation == 004
    if(Serial.read() == "OK"){
-  Serial.println("Day");   Serial.println(Dey);
+  Serial.println("005");   Serial.println(Dey);                         //Dey == 005
   }}}}}
 
 void loop()
