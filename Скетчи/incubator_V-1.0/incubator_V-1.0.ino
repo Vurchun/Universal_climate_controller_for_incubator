@@ -566,17 +566,17 @@ void timerot()                                                             // в
 } 
 void Esp()
 {
-Serial.println("Start"); //EspStart
+Serial.println("001");                                           //Start == 001
  lcd.setCursor(18, 3); lcd.print("\8");       
-  Serial.println("001");  Serial.println(Tnow);                        //Temp == 001
+  Serial.println("002");  Serial.println(Tnow);                        //Temp == 002
   if(Serial.read() == "OK"){    
-  Serial.println("002"); Serial.println(TempIncubations);       //TempIncubationsp == 002
+  Serial.println("003"); Serial.println(TempIncubations);       //TempIncubationsp == 003
   if(Serial.read() == "OK"){
-   Serial.println("001");  Serial.println(hum);                         //hum == 003
+   Serial.println("004");  Serial.println(hum);                         //hum == 004
    if(Serial.read() == "OK"){
-   Serial.println("004");  Serial.println(HumiditiIncubation);   //HumiditiIncubation == 004
+   Serial.println("005");  Serial.println(HumiditiIncubation);   //HumiditiIncubation == 005
    if(Serial.read() == "OK"){
-  Serial.println("005");   Serial.println(Dey);                         //Dey == 005
+  Serial.println("010");   Serial.println(Dey);                         //Dey == 010
   }}}}}
 
 void loop()
