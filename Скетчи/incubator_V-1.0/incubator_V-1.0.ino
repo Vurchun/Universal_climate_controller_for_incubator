@@ -394,7 +394,7 @@ void TimePrint()
   byte static timeprintprev = 0;
   if (RTC.second != timeprintprev)
   {
-    lcd.clear(); lcd.setCursor(0, 4);
+    lcd.setCursor(0, 4);
     if (RTC.hour < 10) lcd.print(0); lcd.print(RTC.hour); lcd.print(":"); if (RTC.minute < 10) lcd.print(0); lcd.print(RTC.minute); lcd.print(":"); if (RTC.second < 10) lcd.print(0); lcd.print(RTC.second);
     if (TIFlagd == 1) TimerCalculatePrint();
     timeprintprev = RTC.second;
@@ -567,7 +567,7 @@ void timerot()                                                             // в
 void Esp()
 {
 Serial.println("1");                                           //Start == 001
- lcd.setCursor(18, 3); lcd.print("\8");       
+ lcd.setCursor(18, 3); lcd.print("/8");       
   Serial.println("Tnow");  Serial.println(Tnow);                        //Temp == 002
   Serial.println("TempIncubations"); Serial.println(TempIncubations);       //TempIncubationsp == 003
    Serial.println("hum");  Serial.println(hum);                         //hum == 004
@@ -839,9 +839,9 @@ void loop()
   }
   //Serial.print("chek ");
   switch (m) {
-  case 0: {  TempRead();  TempHumRead_DHT22();lcd.clear();lcd.setCursor(0, 0);  lcd.print("T="); lcd.print(Tnow); lcd.print("\3 (");lcd.print(TempIncubations);    lcd.print("\3)");  
-                                                          lcd.setCursor(0, 1);  lcd.print("H="); lcd.print(hum);  lcd.print("% ("); lcd.print(HumiditiIncubation); lcd.print("%)");
-                                                          lcd.setCursor(0, 2);  lcd.print("Day = "); lcd.print(Dey); StartFan();  StartHot();  StartHum(); timerot();TimePrint();Esp();FlagMenu = 0;             break; }
+  case 0: {  lcd.clear();lcd.setCursor(0, 0);  lcd.print("T="); lcd.print(Tnow); lcd.print("\3 (");lcd.print(TempIncubations);    lcd.print("\3)");  
+             lcd.setCursor(0, 1);  lcd.print("H="); lcd.print(hum);  lcd.print("% ("); lcd.print(HumiditiIncubation); lcd.print("%)");
+             lcd.setCursor(0, 2);  lcd.print("Day = "); lcd.print(Dey); TempRead();  TempHumRead_DHT22();StartFan();  StartHot();  StartHum(); timerot();TimePrint();Esp();FlagMenu = 0;             break; }
   case 10: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("    Setting     ")); lcd.setCursor(0, 2); lcd.print(F("   incubation   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
   case 11: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Temperature inc ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(TempIncubations);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
   case 12: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K p     ")); lcd.setCursor(0, 1); lcd.print(F("P = ")); lcd.print(consKp);                                            PrintMenuWrite(FlagMenu); delay(25);                          break; }
