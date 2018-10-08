@@ -32,6 +32,8 @@ void SendEsp()
     int Hum = Serial.parseInt(); client.publish("Incubator/Hum",String(Hum));Serial.println(Hum);
     int ControlHum = Serial.parseInt(); client.publish("Incubator/ControlHum",String(ControlHum));Serial.println(ControlHum);
     int Day = Serial.parseInt(); client.publish("Incubator/Day",String(Day));Serial.println(Day);
+    int power = Serial.parseInt(); client.publish("Incubator/Power",String(power));Serial.println(power);
+    int netpower = Serial.parseInt(); client.publish("Incubator/NetPower",String(netpower));Serial.println(netpower);
     Serial.println("Finish");
     Serial.println("");
     }
