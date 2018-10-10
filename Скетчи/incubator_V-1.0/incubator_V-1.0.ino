@@ -103,7 +103,7 @@ int PinHum = 4;                             // первоначальное по
   int DayInc;                                   
   int speed ;
 L298N motor(6,8,7,8,7,6);
-  float voltage ;            // напряжение на аккумуляторе
+  unsigned char voltage ;            // напряжение на аккумуляторе
   float CellVoltage;        // напряжение аккумулятора
   float power ;            // емкость аккумулятора
   int netpower ;           // наличие сети
@@ -311,8 +311,8 @@ void PressKeyMenu()                                                             
 {
   PressingButtons = 0;
   buttons_Menu = analogRead(PinButtons);delay(25);
-  int buttons_Menu1 = analogRead(PinButtons);delay(25);
-  int buttons_Menu2 = analogRead(PinButtons);delay(25);
+  unsigned char buttons_Menu1 = analogRead(PinButtons);delay(25);
+  unsigned char buttons_Menu2 = analogRead(PinButtons);delay(25);
   buttons_Menu = ( buttons_Menu + buttons_Menu1 + buttons_Menu2 ) / 3;
   Serial.print("  Resistant key button module="); Serial.print(buttons_Menu); Serial.println(" ");
   if (buttons_Menu >= 0 && buttons_Menu < 20)  PressingButtons = 1;           // меню       
