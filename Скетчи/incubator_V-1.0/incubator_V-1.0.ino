@@ -397,17 +397,9 @@ void TimerCalculatePrint()
     Yer = RTC.year - TRyear;
   }
   }
-void TimePrint()
-{
-  byte static timeprintprev = 0;
-  if (RTC.second != timeprintprev)
-  {
-    lcd.setCursor(0, 4);
-    if (RTC.hour < 10) lcd.print(0); lcd.print(RTC.hour); lcd.print(":"); if (RTC.minute < 10) lcd.print(0); lcd.print(RTC.minute); lcd.print(":"); if (RTC.second < 10) lcd.print(0); lcd.print(RTC.second);
-    if (TIFlagd == 1) TimerCalculatePrint();
-    timeprintprev = RTC.second;
-  }
-}
+
+
+
 void StartFan() // включение и отключение вентилятора и печать их состояний на дисплей 
 {
   if (Tnow >= (maxTempFanStart + (deltaTIncubations / 2)))
@@ -523,10 +515,10 @@ label_1:
     //---------------------------------------------------------------------------------------------------------------------------//
     PressKeyMenu();  if (PressingButtons == 5) goto label_3;          // проверка нажатия кнопки запуска/остановки переворота лотка
     if (Rotate == 1) {
-      lcd.setCursor(0, 4);  lcd.print("start rotate EGG");  motor.drive_motor(0, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(0, speed);
     }
     else if (Rotate == 0) {
-      lcd.setCursor(0, 4);  lcd.print("start rotate EGG"); motor.drive_motor(1, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG"); motor.drive_motor(1, speed);
     }goto label_3;
   }
 label_2:
@@ -538,16 +530,16 @@ label_2:
     //---------------------------------------------------------------------------------------------------------------------------//
     PressKeyMenu();  if (PressingButtons == 5) goto label_3;          // проверка нажатия кнопки запуска/остановки переворота лотка
     if (Rotate == 1) {
-      lcd.setCursor(0, 4);  lcd.print("start rotate EGG");  motor.drive_motor(0, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(0, speed);
     }
     else if (Rotate == 0) {
-      lcd.setCursor(0, 4);  lcd.print("start rotate EGG");  motor.drive_motor(1, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(1, speed);
     }goto label_3;
   }
   else
   {
   label_3:
-    lcd.setCursor(0, 4);  lcd.print("stop rotate EGG ");  motor.full_stop(100);
+    lcd.setCursor(0, 3);  lcd.print("stop rotate EGG ");  motor.full_stop(100);
     if (Rotate == 1) Rotate = 0; else if (Rotate == 0) Rotate = 1;
   }
 }
@@ -868,7 +860,9 @@ void loop()
   switch (m) {
   case 0: {  lcd.clear();lcd.setCursor(0, 0);  lcd.print("T="); lcd.print(Tnow); lcd.print("\3 (");lcd.print(TempIncubations);    lcd.print("\3)");  
              lcd.setCursor(0, 1);  lcd.print("H="); lcd.print(hum);  lcd.print("% ("); lcd.print(HumiditiIncubation); lcd.print("%)");
-             lcd.setCursor(0, 2);  lcd.print("Day = "); lcd.print(Dey); TempRead(); HumRead_DHT22();StartFan();  StartHot();  StartHum(); timerot();TimePrint();Esp();FlagMenu = 0;             break; }
+             lcd.setCursor(0, 2);  lcd.print("Day = "); lcd.print(Dey);
+            if (RTC.hour < 10) lcd.print(0); lcd.print(RTC.hour); lcd.print(":"); if (RTC.minute < 10) lcd.print(0); lcd.print(RTC.minute); lcd.print(":"); if (RTC.second < 10) lcd.print(0); lcd.print(RTC.second);
+              TempRead(); HumRead_DHT22();StartFan();  StartHot();  StartHum(); timerot();TimerCalculatePrint();Esp();FlagMenu = 0;             break; }
   case 10: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("    Setting     ")); lcd.setCursor(0, 2); lcd.print(F("   incubation   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
   case 11: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Temperature inc ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(TempIncubations);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
   case 12: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K p     ")); lcd.setCursor(0, 1); lcd.print(F("P = ")); lcd.print(consKp);                                            PrintMenuWrite(FlagMenu); delay(25);                          break; }
