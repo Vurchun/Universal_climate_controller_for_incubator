@@ -489,7 +489,11 @@ void TempRead()                                                     // Чтен�
     sensors.requestTemperatures();                 // Запрос на измерение температуры (1-й ошибочный)
     delay(25);                                   // Задержка перед поторным измерением
     sensors.requestTemperatures();                 // Запрос на измерение температуры (повторный)
-    Tnow = double(sensors.getTempCByIndex(0));   // Получаем значение температуры
+    double T1 = double(sensors.getTempCByIndex(0));   // Получаем значение температуры
+    double T2 = double(sensors.getTempCByIndex(1));   // Получаем значение температуры
+    if (T1 <= (-50)) Tnow = T2;
+    if (T2 <= (-50)) Tnow = T1;
+    else Tnow = ( T1 + T2 ) / 2;
     }
 }
 void HumRead_DHT22()
@@ -567,8 +571,8 @@ void timerot()                                                             // в
 } 
 void Power()
 {
-   voltage = analogRead(14); 
-   power = ( voltage * CellVoltage ) / 255 / CellVoltage  * 100;       lcd.setCursor(3, 13);  lcd.print(power);lcd.print("%");
+   voltage = analogRead(14)* CellVoltage / 255; 
+   power = voltage / CellVoltage  * 100;       lcd.setCursor(3, 13);  lcd.print(power);lcd.print("%");
    netpower = digitalRead(9);
   }
 void Esp()
@@ -581,7 +585,7 @@ Serial.println("1");                                           //Start == 001
    Serial.println("hum");  Serial.println(hum);                         
    Serial.println("HumiditiIncubation");  Serial.println(HumiditiIncubation);  
   Serial.println("Dey");   Serial.println(Dey);                        
-  Serial.println("Power");   Serial.println(power);                         
+  Serial.println("Voltage");   Serial.println(voltage);                         
   Serial.println("NetPower");   Serial.println(netpower);                       
   }
 
