@@ -51,7 +51,7 @@ int HumiditiIncubation = 60, deltaHumiditiIncubation = 1;             // вла�
 #define maxdeltaHum 10                                                // максимальная дельта влажности для меню
 #define FadeAmountdeltaHum 1                                         // шаг изминения дельты влажности для меню
 #define FadeAmountHum 1                                               // шаг изменения влажности в меню
-#define MaximumHumiditiIncubation 70                                  // максимальное значение влажности для меню
+#define MaximumHumiditiIncubation 100                                  // максимальное значение влажности для меню
 #define MinimumHumiditiIncubation 10                                 // минимальное значение влажности для меню
 int KHumiditiIncubation = 0.45,DecreaseDayHumiditiIncubation = 10,IncreaseDayHumiditiIncubation = 16;
 int DDHI,IDHI;
@@ -61,6 +61,7 @@ int DDHI,IDHI;
 #define MinimumIncreaseDayHumiditiIncubation 1
 #define MaximumKHumiditiIncubation 100  
 #define MinimumKHumiditiIncubation 1 
+int Sec, SecPer, Min, MinPer, Hou, HouPer, Dey, DeyPer, Mon, MonPer, Yer;
 int TimeRotations = 24;                                               // колличество переворотов яиц в инкубаторе в сутки
 const int RotationPerDay[9] = {0, 1 , 2 , 3 , 4 , 6 , 8 , 12 , 24 }; // колличество возможных переворотов яиц в сутки
 int i = 0; int k = 0;
@@ -240,6 +241,7 @@ void RASEEPROMSTimer()
   EEPROM.write(123, TRhour); delay(100);                                             // запись часа начала инкубации в ячейку 123 EEPROM
   EEPROM.write(124, TRminute); delay(100);                                             // запись минуты начала инкубации в ячейку 124 EEPROM
   EEPROM.write(125, TRsecond); delay(100);                                             // запись секунды начала инкубации в ячейку 125 EEPROM
+  Dey = 0;
   if(IDHI == 0) HumiditiIncubation /=KHumiditiIncubation/100; delay (100); BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);delay(100);IDHI=0; DDHI=0;
   IDHI=0; DDHI=0; 
   DayInc = 0 ; TimeRotations = RotationPerDay[i] ;                                                                 
@@ -345,7 +347,7 @@ void PrintMenuWrite(int FlagM)
   }
 }
 
-int Sec, SecPer, Min, MinPer, Hou, HouPer, Dey, DeyPer, Mon, MonPer, Yer;
+
 void TimerCalculatePrint()
 {  
   if (TIFlagf == 1) {
@@ -719,9 +721,9 @@ void loop()
                       else {
                         if (MainMenu == 5 && FlagMenu == 1) {
                           switch (SubMenu) {
-                          case 1: {  k--; if (k < 0) k = 0; PinHot = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(100, PinHot); delay(100);break; }
-                          case 2: {  k--; if (k < 0) k = 0; PinFan = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(101, PinFan); delay(100);break; }
-                          case 3: {  k--; if (k < 0) k = 0; PinHum = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(102, PinHum); delay(100);break; }
+                          case 1: {  k--; if (k <= 0) k = 0; PinHot = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(100, PinHot); delay(100);break; }
+                          case 2: {  k--; if (k <= 0) k = 0; PinFan = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(101, PinFan); delay(100);break; }
+                          case 3: {  k--; if (k <= 0) k = 0; PinHum = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(102, PinHum); delay(100);break; }
                         
                           }
                         }
@@ -838,8 +840,8 @@ void loop()
   }
   switch (m) {
   case 0: {  lcd.clear();lcd.setCursor(0, 0);  lcd.print("T="); lcd.print(Tnow); lcd.print("\3(");lcd.print(TempIncubations);    lcd.print("\3)");  
-             lcd.setCursor(0, 1);  lcd.print("H="); lcd.print(hum);  lcd.print("%("); lcd.print(HumiditiIncubation); lcd.print("%)");
-             lcd.setCursor(0, 2);  lcd.print("Day="); lcd.print(Dey);lcd.print("/"); lcd.print(DayInc);lcd.print(";");
+             lcd.setCursor(0, 1);  lcd.print("H="); lcd.print(hum);  lcd.print("%("); lcd.print(HumiditiIncubation); lcd.print("%)");lcd.print("Bat="); lcd.print(power);
+             lcd.setCursor(0, 2);  lcd.print("Day="); lcd.print(Dey);
             if (RTC.hour < 10) lcd.print(0); lcd.print(RTC.hour); lcd.print(":"); if (RTC.minute < 10) lcd.print(0); lcd.print(RTC.minute); lcd.print(":"); if (RTC.second < 10) lcd.print(0); lcd.print(RTC.second);
               TempRead(); HumRead_DHT22();StartFan();  StartHot();  StartHum(); timerot();TimerCalculatePrint();Esp();FlagMenu = 0;             break; }
   case 10: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("    Setting     ")); lcd.setCursor(0, 2); lcd.print(F("   incubation   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(100);FlagMenu = 0;             break; }
