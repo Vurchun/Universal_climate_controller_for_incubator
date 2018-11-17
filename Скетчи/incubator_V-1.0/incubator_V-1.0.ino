@@ -16,7 +16,7 @@
 #define EEPROM_ADDR 0x50
 #define DS18S20_ID 0x10
 #define DS18B20_ID 0x28
-#define DHTPIN 12                                              // датчик температуры и влажности DHT22 на 12 цифровом входе
+#define DHTPIN 12                                                // датчик температуры и влажности DHT22 на 12 цифровом входе
 #define DHTTYPE DHT22                                            // выбор типа датчика DHT 11 
 #include <DallasTemperature.h>                                   // Подключаем библиотеку с функциями для работы с DS18B20 (запросы, считывание и преобразование возвращаемых данных)
 #define ONE_WIRE_BUS 13                                          // Указываем пин подключения data-вывода датчика температуры
@@ -51,7 +51,7 @@ int HumiditiIncubation = 60, deltaHumiditiIncubation = 1;             // вла�
 #define maxdeltaHum 10                                                // максимальная дельта влажности для меню
 #define FadeAmountdeltaHum 1                                         // шаг изминения дельты влажности для меню
 #define FadeAmountHum 1                                               // шаг изменения влажности в меню
-#define MaximumHumiditiIncubation 100                                  // максимальное значение влажности для меню
+#define MaximumHumiditiIncubation 70                                  // максимальное значение влажности для меню
 #define MinimumHumiditiIncubation 10                                 // минимальное значение влажности для меню
 int KHumiditiIncubation = 0.45,DecreaseDayHumiditiIncubation = 10,IncreaseDayHumiditiIncubation = 16;
 int DDHI,IDHI;
@@ -61,7 +61,6 @@ int DDHI,IDHI;
 #define MinimumIncreaseDayHumiditiIncubation 1
 #define MaximumKHumiditiIncubation 100  
 #define MinimumKHumiditiIncubation 1 
-int Sec, SecPer, Min, MinPer, Hou, HouPer, Dey, DeyPer, Mon, MonPer, Yer;
 int TimeRotations = 24;                                               // колличество переворотов яиц в инкубаторе в сутки
 const int RotationPerDay[9] = {0, 1 , 2 , 3 , 4 , 6 , 8 , 12 , 24 }; // колличество возможных переворотов яиц в сутки
 int i = 0; int k = 0;
@@ -100,14 +99,11 @@ uint8_t   WiFi_ON[8]          = { B00000, B11111, B01110, B10101, B01110, B00100
 int PinHot = 2;                            // первоначальное подключение обогрева на реле №1 
 int PinFan = 3;                             // первоначальное подключениe обдувa на реле №2
 int PinHum = 4;                             // первоначальное подключение увлажнителя на реле №3
-
-  int DayInc;                                   
-  int speed ;
-L298N motor(6,8,7,8,7,6);
-  unsigned char voltage ;            // напряжение на аккумуляторе
-  float CellVoltage;        // напряжение аккумулятора
+ L298N motor(6,8,7,8,7,6);
+  float voltage ;            // напряжение на аккумуляторе
   float power ;            // емкость аккумулятора
   int netpower ;           // наличие сети
+  int DayInc ;
   
  
 #define PinButtons 17                       // кнопки меню на A3 аналоговом входе
@@ -136,7 +132,6 @@ unsigned long dht22readMillis ;                                              //�
 unsigned long MenuRewriteMillis = 0 ;                                          //счетчик прошедшего времени для обновления главного меню
 #define MenuRewriteinterval 500                                        //обновление главного меню через 0,5сек
 unsigned long espwriteMillis = 0;
-#define esptime 15000
 unsigned long TimeFaning = 0;                                                    //счетчик прошедшего времени для продувки инкубатора от СО2
 unsigned long TimeIntervalFaning;                                          //счетчик прошедшего времени для интервала между продувками инкубатора от СО2
 unsigned long TimeFaningInterval = TimeFanWork * 1000;                 //длительность работы вентилятора при продувке инкубатора от СО2 
@@ -145,13 +140,11 @@ unsigned long TimeIntervalFaningInterval = TimeIntervalFanWork * 60000;//дли�
 void setup()
 {
   lcd.begin(20, 4);
-  //Serial.begin(9600);
   Wire.begin();
   Serial.begin(115200);             // Запускаем вывод данных на серийный порт ESP8266
   sensors.begin();                // Запускаем библиотеку измерения температуры
-   RTC.startClock();
- 
- myPID.SetMode(AUTOMATIC);
+ analogReference(EXTERNAL);        // Команда для сравнение напржения с входом AREF
+  myPID.SetMode(AUTOMATIC);
 
   loopTime = currentTime;
   pinMode(PinButtons, INPUT);         // кнопки меню на 1 аналоговом входе (подключаем подтягивающий внешний резистор 2kOm)
@@ -164,56 +157,56 @@ void setup()
   pinMode(5, OUTPUT);                       // Реле №4 на 5 выходе
   digitalWrite(2, HIGH);  digitalWrite(3, HIGH);  digitalWrite(4, HIGH);  digitalWrite(5, HIGH); // первоначальное отключение всех устройств при загрузке с паузой в 0,2сек чтобы не было скачка падения напряжения на БП
                                                    // --------------- чтение из EEPROM привязки номера исполнительного устройства к типу регулируемой велечины
-  PinHot = EEPROM.read(100); delay(100);       // чтение из ячейки памяти "100" EEPROM настройки пина обогрева
-  PinFan = EEPROM.read(101); delay(100);       // чтение из ячейки памяти "101" EEPROM настройки пина обдува
-  PinHum = EEPROM.read(102); delay(100);       // чтение из ячейки памяти "104" EEPROM настройки пина увлажнения
+  PinHot = EEPROM.read(100); delay(25);       // чтение из ячейки памяти "100" EEPROM настройки пина обогрева
+  PinFan = EEPROM.read(101); delay(25);       // чтение из ячейки памяти "101" EEPROM настройки пина обдува
+  PinHum = EEPROM.read(102); delay(25);       // чтение из ячейки памяти "104" EEPROM настройки пина увлажнения
                           // --------------- чтение из EEPROM привязки номера исполнительного устройства к типу регулируемой велечины
 
 
 
                           // --------------- чтение из EEPROM установок настройки инкубатора сохраненных в банк настроек №0
-  byte lowByte = EEPROM.read(0); delay(100);                                            // чтение lowByte температуры инкубации *100 из ячейки "0"
-  byte higtByte = EEPROM.read(1); delay(100);                                            // чтение higtByte температуры инкубации *100 из ячейки "1"
+  byte lowByte = EEPROM.read(0); delay(25);                                            // чтение lowByte температуры инкубации *100 из ячейки "0"
+  byte higtByte = EEPROM.read(1); delay(25);                                            // чтение higtByte температуры инкубации *100 из ячейки "1"
   TempIncubations = (((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00)) / 100.00;
-  lowByte = EEPROM.read(2); delay(100);                                                 // чтение lowByte дельтаТ температуры инкубации *100 из ячейки "2"
-  higtByte = EEPROM.read(3); delay(100);                                                 // чтение higtByte дельтаТ температуры инкубации *100 из ячейки "3"
+  lowByte = EEPROM.read(2); delay(25);                                                 // чтение lowByte дельтаТ температуры инкубации *100 из ячейки "2"
+  higtByte = EEPROM.read(3); delay(25);                                                 // чтение higtByte дельтаТ температуры инкубации *100 из ячейки "3"
   deltaTIncubations = (((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00)) / 100.00;
-  HumiditiIncubation = EEPROM.read(4); delay(100);                                       // чтение дельты влажности инкубации из ячейки "4"
-  deltaHumiditiIncubation = EEPROM.read(5);  delay(100);                                 // чтение дельты влажности инкубации из ячейки "5"
-  TimeRotations = EEPROM.read(6);   delay(100);                                          // чтение времени через которое происходит переворот яиц из ячейки "6"
-  lowByte = EEPROM.read(7);  delay(100);                                                // чтение lowByte температуры продувки *100 из ячейки "7"
-  higtByte = EEPROM.read(8);  delay(100);                                                // чтение higtByte температуры продувки *100 из ячейки "8"
+  HumiditiIncubation = EEPROM.read(4); delay(25);                                       // чтение дельты влажности инкубации из ячейки "4"
+  deltaHumiditiIncubation = EEPROM.read(5);  delay(25);                                 // чтение дельты влажности инкубации из ячейки "5"
+  TimeRotations = EEPROM.read(6);   delay(25);                                          // чтение времени через которое происходит переворот яиц из ячейки "6"
+  lowByte = EEPROM.read(7);  delay(25);                                                // чтение lowByte температуры продувки *100 из ячейки "7"
+  higtByte = EEPROM.read(8);  delay(25);                                                // чтение higtByte температуры продувки *100 из ячейки "8"
   maxTempFanStart = (((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00)) / 100.00;
-  lowByte = EEPROM.read(9);  delay(100);                                                // чтение lowByte времени вентиляции инкубатора от СО2 из ячейки "9"
-  higtByte = EEPROM.read(10); delay(100);                                                // чтение higtByte времени вентиляции инкубатора от СО2 из ячейки "10"
+  lowByte = EEPROM.read(9);  delay(25);                                                // чтение lowByte времени вентиляции инкубатора от СО2 из ячейки "9"
+  higtByte = EEPROM.read(10); delay(25);                                                // чтение higtByte времени вентиляции инкубатора от СО2 из ячейки "10"
   TimeFanWork = ((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00);
-  lowByte = EEPROM.read(11); delay(100);                                                // чтение lowByte интервала между вентиляциями инкубатора от СО2 из ячейки "11"
-  higtByte = EEPROM.read(12); delay(100);                                                // чтение higtByte интервала между вентиляциями инкубатора от СО2 из ячейки "12"
+  lowByte = EEPROM.read(11); delay(25);                                                // чтение lowByte интервала между вентиляциями инкубатора от СО2 из ячейки "11"
+  higtByte = EEPROM.read(12); delay(25);                                                // чтение higtByte интервала между вентиляциями инкубатора от СО2 из ячейки "12"
   TimeIntervalFanWork = ((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00);
-  FanWorkFlag = EEPROM.read(13); delay(100);                                             // чтение флага активностивентиляциями инкубатора от СО2 из ячейки "13"
+  FanWorkFlag = EEPROM.read(13); delay(25);                                             // чтение флага активностивентиляциями инкубатора от СО2 из ячейки "13"
   TimeFaningInterval = TimeFanWork * 1000;                                                 //чтение длительности работы вентилятора при продувке инкубатора от СО2 
   TimeIntervalFaningInterval = TimeIntervalFanWork * 60000;                                //чтение длительности интервала между продувками инкубатора от СО2
-  KHumiditiIncubation = EEPROM.read(14); delay(100);                                      //чтение коеффициента изменения влажности
+  KHumiditiIncubation = EEPROM.read(14); delay(25);                                      //чтение коеффициента изменения влажности
   DecreaseDayHumiditiIncubation = EEPROM.read(15); delay(100);                          //чтение дня понижения  влажности
-  IncreaseDayHumiditiIncubation = EEPROM.read(16); delay(100);                              //чтение дня повишения влажности
-  consKp = EEPROM.read(104); delay(100);                                            //чтение Пропорционального коефициента             
-  consKi = EEPROM.read(105); delay(100);                                            //чтение Интегрального коефициента                 
-  consKd = EEPROM.read(106); delay(100);                                             //чтение Дефиринциального коефициента      
-  int  CellVoltage=  EEPROM.read(108); delay(100);                                            //чтение Напряжения Аккумулятора       
+  IncreaseDayHumiditiIncubation = EEPROM.read(16); delay(25);                              //чтение дня повишения влажности
+  DayInc = EEPROM.read(17); delay(25);                                               //чтение дней инкубации
+  consKp = EEPROM.read(104); delay(25);                                            //чтение Пропорционального коефициента             
+  consKi = EEPROM.read(105); delay(25);                                            //чтение Интегрального коефициента                 
+  consKd = EEPROM.read(106); delay(25);                                             //чтение Дефиринциального коефициента      
   
 
            
                                                // --------------- чтение из EEPROM установок настройки инкубатора сохраненных в банк настроек №1
 
                                                // --------------- чтение из EEPROM установок и времени начала инкубации таймера инкубации
-  TIFlagd = EEPROM.read(110); delay(100);                                                // чтение флага ВКЛЮЧЕН (1) / ВЫКЛЮЧЕН (0)  индикации таймера инкубации
-  TIFlagf = EEPROM.read(111); delay(100);                                                // чтение флага ВКЛЮЧЕН (1) / ВЫКЛЮЧЕН (0)  таймера инкубации
-  TRyear = EEPROM.read(120) + 2000; delay(100);                                         // чтение года начала инкубации 
-  TRmonth = EEPROM.read(121); delay(100);                                                // чтение месяца начала инкубации
-  TRday = EEPROM.read(122); delay(100);                                                // чтение дня начала инкубации
-  TRhour = EEPROM.read(123); delay(100);                                                // чтение часа начала инкубации
-  TRminute = EEPROM.read(124); delay(100);                                                // чтение минуты начала инкубации
-  TRsecond = EEPROM.read(125); delay(100);                                                // чтение секунды начала инкубации
+  TIFlagd = EEPROM.read(110); delay(25);                                                // чтение флага ВКЛЮЧЕН (1) / ВЫКЛЮЧЕН (0)  индикации таймера инкубации
+  TIFlagf = EEPROM.read(111); delay(25);                                                // чтение флага ВКЛЮЧЕН (1) / ВЫКЛЮЧЕН (0)  таймера инкубации
+  TRyear = EEPROM.read(120) + 2000; delay(25);                                         // чтение года начала инкубации 
+  TRmonth = EEPROM.read(121); delay(25);                                                // чтение месяца начала инкубации
+  TRday = EEPROM.read(122); delay(25);                                                // чтение дня начала инкубации
+  TRhour = EEPROM.read(123); delay(25);                                                // чтение часа начала инкубации
+  TRminute = EEPROM.read(124); delay(25);                                                // чтение минуты начала инкубации
+  TRsecond = EEPROM.read(125); delay(25);                                                // чтение секунды начала инкубации
                                                // --------------- чтение из EEPROM установок и времени начала инкубации таймера инкубации
 
 
@@ -235,67 +228,66 @@ void setup()
 void RASEEPROMSTimer()
 {
   TRyear = RTC.year - 2000; TRmonth = RTC.month; TRday = RTC.day; TRhour = RTC.hour; TRminute = RTC.minute; TRsecond = RTC.second;
-  EEPROM.write(120, TRyear); delay(100);                                             // запись года начала инкубации в ячейку 120 EEPROM
-  EEPROM.write(121, TRmonth); delay(100);                                             // запись месяца начала инкубации в ячейку 121 EEPROM
-  EEPROM.write(122, TRday); delay(100);                                             // запись дня начала инкубации в ячейку 122 EEPROM
-  EEPROM.write(123, TRhour); delay(100);                                             // запись часа начала инкубации в ячейку 123 EEPROM
-  EEPROM.write(124, TRminute); delay(100);                                             // запись минуты начала инкубации в ячейку 124 EEPROM
-  EEPROM.write(125, TRsecond); delay(100);                                             // запись секунды начала инкубации в ячейку 125 EEPROM
-  Dey = 0;
-  if(IDHI == 0) HumiditiIncubation /=KHumiditiIncubation/100; delay (100); BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);delay(100);IDHI=0; DDHI=0;
-  IDHI=0; DDHI=0; 
-  DayInc = 0 ; TimeRotations = RotationPerDay[i] ;                                                                 
+  EEPROM.write(120, TRyear); delay(25);                                             // запись года начала инкубации в ячейку 120 EEPROM
+  EEPROM.write(121, TRmonth); delay(25);                                             // запись месяца начала инкубации в ячейку 121 EEPROM
+  EEPROM.write(122, TRday); delay(25);                                             // запись дня начала инкубации в ячейку 122 EEPROM
+  EEPROM.write(123, TRhour); delay(25);                                             // запись часа начала инкубации в ячейку 123 EEPROM
+  EEPROM.write(124, TRminute); delay(25);                                             // запись минуты начала инкубации в ячейку 124 EEPROM
+  EEPROM.write(125, TRsecond); delay(25);                                             // запись секунды начала инкубации в ячейку 125 EEPROM
+  if(IDHI == 0) HumiditiIncubation /=KHumiditiIncubation/100; delay (100); BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);delay(25);IDHI=0; DDHI=0;
+  IDHI=0; DDHI=0; DayInc=0; currentMillis=0;
+                                                                  
 }
 
 void SaveToEEPROM(int BankSave)                                                         // запись данных во внутренний EEPROM 
 {
   int TIC = int(TempIncubations * 100); byte lowByte = ((TIC >> 0) & 0xFF); byte higtByte = ((TIC >> 8) & 0xFF);
-  BS = BankSave * 20 + 0;     EEPROM.write(BS, lowByte);                  delay(100);    // запись lowByte температуры инкубации * 100 в ячейку "0" банка "bank"
-  BS = BankSave * 20 + 1;     EEPROM.write(BS, higtByte);                 delay(100);    // запись higtByte температуры инкубации * 100 в ячейку "1" банка "bank"
+  BS = BankSave * 20 + 0;     EEPROM.write(BS, lowByte);                  delay(25);    // запись lowByte температуры инкубации * 100 в ячейку "0" банка "bank"
+  BS = BankSave * 20 + 1;     EEPROM.write(BS, higtByte);                 delay(25);    // запись higtByte температуры инкубации * 100 в ячейку "1" банка "bank"
   int DTIC = int(deltaTIncubations * 100);  lowByte = ((DTIC >> 0) & 0xFF); higtByte = ((DTIC >> 8) & 0xFF);
-  BS = BankSave * 20 + 2;     EEPROM.write(BS, lowByte);                  delay(100);    // запись lowByte дельтаТ температуры инкубации * 100 в ячейку "2" банка "bank"
-  BS = BankSave * 20 + 3;     EEPROM.write(BS, higtByte);                 delay(100);    // запись higtByte дельтаТ температуры инкубации * 100 в ячейку "3" банка "bank"
-  BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);       delay(100);    // запись дельты влажности инкубации в ячейку "4" банка "bank"
-  BS = BankSave * 20 + 5;     EEPROM.write(BS, deltaHumiditiIncubation);  delay(100);    // запись дельты влажности инкубации в ячейку "5" банка "bank"
-  BS = BankSave * 20 + 6;     EEPROM.write(BS, TimeRotations);            delay(100);    // запись времени через которое происходит переворот яиц в ячейку "6" банка "bank"
+  BS = BankSave * 20 + 2;     EEPROM.write(BS, lowByte);                  delay(25);    // запись lowByte дельтаТ температуры инкубации * 100 в ячейку "2" банка "bank"
+  BS = BankSave * 20 + 3;     EEPROM.write(BS, higtByte);                 delay(25);    // запись higtByte дельтаТ температуры инкубации * 100 в ячейку "3" банка "bank"
+  BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);       delay(25);    // запись дельты влажности инкубации в ячейку "4" банка "bank"
+  BS = BankSave * 20 + 5;     EEPROM.write(BS, deltaHumiditiIncubation);  delay(25);    // запись дельты влажности инкубации в ячейку "5" банка "bank"
+  BS = BankSave * 20 + 6;     EEPROM.write(BS, TimeRotations);            delay(25);    // запись времени через которое происходит переворот яиц в ячейку "6" банка "bank"
   int TICc = int(maxTempFanStart * 100); lowByte = ((TICc >> 0) & 0xFF); higtByte = ((TICc >> 8) & 0xFF);
-  BS = BankSave * 20 + 7;     EEPROM.write(BS, lowByte);                  delay(100);    // запись lowByte температуры продувки * 100 в ячейку "7" банка "bank"
-  BS = BankSave * 20 + 8;     EEPROM.write(BS, higtByte);                 delay(100);    // запись higtByte температуры продувки * 100 в ячейку "8" банка "bank"
+  BS = BankSave * 20 + 7;     EEPROM.write(BS, lowByte);                  delay(25);    // запись lowByte температуры продувки * 100 в ячейку "7" банка "bank"
+  BS = BankSave * 20 + 8;     EEPROM.write(BS, higtByte);                 delay(25);    // запись higtByte температуры продувки * 100 в ячейку "8" банка "bank"
   lowByte = ((TimeFanWork >> 0) & 0xFF); higtByte = ((TimeFanWork >> 8) & 0xFF);
-  BS = BankSave * 20 + 9;     EEPROM.write(BS, lowByte);                  delay(100);    // запись lowByte времени вентиляции инкубатора от СО2 в ячейку "9" банка "bank"
-  BS = BankSave * 20 + 10;    EEPROM.write(BS, higtByte);                 delay(100);    // запись higtByte времени вентиляции инкубатора от СО2 в ячейку "10" банка "bank"
+  BS = BankSave * 20 + 9;     EEPROM.write(BS, lowByte);                  delay(25);    // запись lowByte времени вентиляции инкубатора от СО2 в ячейку "9" банка "bank"
+  BS = BankSave * 20 + 10;    EEPROM.write(BS, higtByte);                 delay(25);    // запись higtByte времени вентиляции инкубатора от СО2 в ячейку "10" банка "bank"
   lowByte = ((TimeIntervalFanWork >> 0) & 0xFF); higtByte = ((TimeIntervalFanWork >> 8) & 0xFF);
-  BS = BankSave * 20 + 11;    EEPROM.write(BS, lowByte);                  delay(100);    // запись lowByte интервала между вентиляциями инкубатора от СО2 в ячейку "11" банка "bank"
-  BS = BankSave * 20 + 12;    EEPROM.write(BS, higtByte);                 delay(100);    // запись higtByte интервала между вентиляциями инкубатора от СО2 в ячейку "12" банка "bank"
-  BS = BankSave * 20 + 13;    EEPROM.write(BS, FanWorkFlag);              delay(100);    // запись флага активностивентиляциями инкубатора от СО2 в ячейку "13" банка "bank"
-  BS = BankSave * 20 + 14;  EEPROM.write(BS,KHumiditiIncubation); delay(100);            // запись Коефицыента влажности инкубатора в ячейку "14" банка "bank"
-  BS = BankSave * 20 + 15;  EEPROM.write(BS,DecreaseDayHumiditiIncubation); delay(100);  // запись дня понижения влажности в ячейку "15" банка "bank"
-  BS = BankSave * 20 + 16;  EEPROM.write(BS,IncreaseDayHumiditiIncubation); delay(100); // запись дня повишения влажности в ячейку "16" банка "bank"
- }
+  BS = BankSave * 20 + 11;    EEPROM.write(BS, lowByte);                  delay(25);    // запись lowByte интервала между вентиляциями инкубатора от СО2 в ячейку "11" банка "bank"
+  BS = BankSave * 20 + 12;    EEPROM.write(BS, higtByte);                 delay(25);    // запись higtByte интервала между вентиляциями инкубатора от СО2 в ячейку "12" банка "bank"
+  BS = BankSave * 20 + 13;    EEPROM.write(BS, FanWorkFlag);              delay(25);    // запись флага активностивентиляциями инкубатора от СО2 в ячейку "13" банка "bank"
+  BS = BankSave * 20 + 14;  EEPROM.write(BS,KHumiditiIncubation); delay(25);            // запись Коефицыента влажности инкубатора в ячейку "14" банка "bank"
+  BS = BankSave * 20 + 15;  EEPROM.write(BS,DecreaseDayHumiditiIncubation); delay(25);  // запись дня понижения влажности в ячейку "15" банка "bank"
+  BS = BankSave * 20 + 16;  EEPROM.write(BS,IncreaseDayHumiditiIncubation); delay(25); // запись дня повишения влажности в ячейку "16" банка "bank"
+  }
 void LoadFromEEPROM(int BankLoad)                                                       // загрузка данных из внутреннего EEPROM
 {
-  BL = BankLoad * 20 + 0; byte lowByte = EEPROM.read(BL);            delay(100);    // чтение lowByte температуры инкубации *100 из ячейки "0"
-  BL = BankLoad * 20 + 1;     byte higtByte = EEPROM.read(BL);            delay(100);    // чтение higtByte температуры инкубации *100 из ячейки "1"
+  BL = BankLoad * 20 + 0; byte lowByte = EEPROM.read(BL);            delay(25);    // чтение lowByte температуры инкубации *100 из ячейки "0"
+  BL = BankLoad * 20 + 1;     byte higtByte = EEPROM.read(BL);            delay(25);    // чтение higtByte температуры инкубации *100 из ячейки "1"
   TempIncubations = (((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00)) / 100.00;
-  BL = BankLoad * 20 + 2;     lowByte = EEPROM.read(BL);                 delay(100);    // чтение lowByte дельтаТ температуры инкубации *100 из ячейки "2"
-  BL = BankLoad * 20 + 3;     higtByte = EEPROM.read(BL);                 delay(100);    // чтение higtByte дельтаТ температуры инкубации *100 из ячейки "3"
+  BL = BankLoad * 20 + 2;     lowByte = EEPROM.read(BL);                 delay(25);    // чтение lowByte дельтаТ температуры инкубации *100 из ячейки "2"
+  BL = BankLoad * 20 + 3;     higtByte = EEPROM.read(BL);                 delay(25);    // чтение higtByte дельтаТ температуры инкубации *100 из ячейки "3"
   deltaTIncubations = (((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00)) / 100.00;
-  BL = BankLoad * 20 + 4;     HumiditiIncubation = EEPROM.read(BL);       delay(100);    // чтение дельты влажности инкубации из ячейки "4"
-  BL = BankLoad * 20 + 5;     deltaHumiditiIncubation = EEPROM.read(BL);  delay(100);    // чтение дельты влажности инкубации из ячейки "5"
-  BL = BankLoad * 20 + 6;     TimeRotations = EEPROM.read(BL);            delay(100);    // чтение времени через которое происходит переворот яиц из ячейки "6"
-  BL = BankLoad * 20 + 7;     lowByte = EEPROM.read(BL);                 delay(100);    // чтение lowByte температуры продувки *100 из ячейки "7"
-  BL = BankLoad * 20 + 8;     higtByte = EEPROM.read(BL);                 delay(100);    // чтение higtByte температуры продувки *100 из ячейки "8"
+  BL = BankLoad * 20 + 4;     HumiditiIncubation = EEPROM.read(BL);       delay(25);    // чтение дельты влажности инкубации из ячейки "4"
+  BL = BankLoad * 20 + 5;     deltaHumiditiIncubation = EEPROM.read(BL);  delay(25);    // чтение дельты влажности инкубации из ячейки "5"
+  BL = BankLoad * 20 + 6;     TimeRotations = EEPROM.read(BL);            delay(25);    // чтение времени через которое происходит переворот яиц из ячейки "6"
+  BL = BankLoad * 20 + 7;     lowByte = EEPROM.read(BL);                 delay(25);    // чтение lowByte температуры продувки *100 из ячейки "7"
+  BL = BankLoad * 20 + 8;     higtByte = EEPROM.read(BL);                 delay(25);    // чтение higtByte температуры продувки *100 из ячейки "8"
   maxTempFanStart = (((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00)) / 100.00;
-  BL = BankLoad * 20 + 9;     lowByte = EEPROM.read(BL);  delay(100);                   // чтение lowByte времени вентиляции инкубатора от СО2 из ячейки "9"
-  BL = BankLoad * 20 + 10;    higtByte = EEPROM.read(BL);  delay(100);                   // чтение higtByte времени вентиляции инкубатора от СО2 из ячейки "10"
+  BL = BankLoad * 20 + 9;     lowByte = EEPROM.read(BL);  delay(25);                   // чтение lowByte времени вентиляции инкубатора от СО2 из ячейки "9"
+  BL = BankLoad * 20 + 10;    higtByte = EEPROM.read(BL);  delay(25);                   // чтение higtByte времени вентиляции инкубатора от СО2 из ячейки "10"
   TimeFanWork = ((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00);
-  BL = BankLoad * 20 + 11;    lowByte = EEPROM.read(BL); delay(100);                    // чтение lowByte интервала между вентиляциями инкубатора от СО2 из ячейки "11"
-  BL = BankLoad * 20 + 12;    higtByte = EEPROM.read(BL); delay(100);                    // чтение higtByte интервала между вентиляциями инкубатора от СО2 из ячейки "12"
+  BL = BankLoad * 20 + 11;    lowByte = EEPROM.read(BL); delay(25);                    // чтение lowByte интервала между вентиляциями инкубатора от СО2 из ячейки "11"
+  BL = BankLoad * 20 + 12;    higtByte = EEPROM.read(BL); delay(25);                    // чтение higtByte интервала между вентиляциями инкубатора от СО2 из ячейки "12"
   TimeIntervalFanWork = ((lowByte << 0) & 0xFF) + ((higtByte << 8) & 0xFF00);
-  BL = BankLoad * 20 + 13;    FanWorkFlag = EEPROM.read(BL); delay(100);                 // чтение флага активностивентиляциями инкубатора от СО2 из ячейки "13"
-  BL = BankLoad * 20 + 14;  KHumiditiIncubation = EEPROM.read(BL); delay(100);            // чтение Коефицыента влажности инкубатора в ячейку "14" банка "bank"
-  BL = BankLoad * 20 + 15;  DecreaseDayHumiditiIncubation = EEPROM.read(BL); delay(100);  // чтение дня понижения влажности в ячейку "15" банка "bank"
-  BL = BankLoad * 20 + 16;  IncreaseDayHumiditiIncubation = EEPROM.read(BL); delay(100); // чтение дня повишения влажности в ячейку "16" банка "bank" 
+  BL = BankLoad * 20 + 13;    FanWorkFlag = EEPROM.read(BL); delay(25);                 // чтение флага активностивентиляциями инкубатора от СО2 из ячейки "13"
+  BL = BankLoad * 20 + 14;  KHumiditiIncubation = EEPROM.read(BL); delay(25);            // чтение Коефицыента влажности инкубатора в ячейку "14" банка "bank"
+  BL = BankLoad * 20 + 15;  DecreaseDayHumiditiIncubation = EEPROM.read(BL); delay(25);  // чтение дня понижения влажности в ячейку "15" банка "bank"
+  BL = BankLoad * 20 + 16;  IncreaseDayHumiditiIncubation = EEPROM.read(BL); delay(25); // чтение дня повишения влажности в ячейку "16" банка "bank" 
   TimeFaningInterval = TimeFanWork * 1000;                 //длительность работы вентилятора при продувке инкубатора от СО2 
   TimeIntervalFaningInterval = TimeIntervalFanWork * 60000;//длительность интервала между продувками инкубатора от СО2
 }
@@ -304,14 +296,15 @@ void LoadFromEEPROM(int BankLoad)                                               
 void PressKeyMenu()                                                                      // Вычиление нажатия кнопок  
 {
   PressingButtons = 0;
-  buttons_Menu = analogRead(PinButtons);delay(100);
+  buttons_Menu = analogRead(PinButtons);
+  buttons_Menu = buttons_Menu ;
+  Serial.print("  Resistant key button module="); Serial.print(buttons_Menu); Serial.println(" ");
   if (buttons_Menu >= 0 && buttons_Menu < 50)  PressingButtons = 1;           // меню       
-  else  if (buttons_Menu > 100 && buttons_Menu < 200) PressingButtons = 2;     // вверх       
-  else  if (buttons_Menu > 300 && buttons_Menu < 400) PressingButtons = 3;     // вниз      
-  else  if ( buttons_Menu > 500 && buttons_Menu < 600)PressingButtons = 4;      // выбор      
-  else  if (buttons_Menu > 700 && buttons_Menu < 900) PressingButtons = 5;  // переворот       
-  else  PressingButtons = 0;
-  Serial.print("Button = ");Serial.println(PressingButtons);          
+  else  if (buttons_Menu > 400 && buttons_Menu < 500) PressingButtons = 2;     // вверх       
+  else  if (buttons_Menu > 200 && buttons_Menu < 300) PressingButtons = 3;     // вниз      
+  else  if ( buttons_Menu > 600 && buttons_Menu < 700)PressingButtons = 4;      // выбор      
+  else  if (buttons_Menu > 850 && buttons_Menu < 950) PressingButtons = 5;  // переворот       
+  else  PressingButtons = 0;            
 }
 
 void PreSetTime()
@@ -347,7 +340,7 @@ void PrintMenuWrite(int FlagM)
   }
 }
 
-
+int Sec, SecPer, Min, MinPer, Hou, HouPer, Dey, DeyPer, Mon, MonPer, Yer;
 void TimerCalculatePrint()
 {  
   if (TIFlagf == 1) {
@@ -386,6 +379,7 @@ void TimerCalculatePrint()
     if ((RTC.month - DeyPer) >= TRmonth) { Mon = RTC.month - TRmonth - DeyPer; MonPer = 0; }
     else { Mon = 12 + (RTC.day - TRmonth) - DeyPer; MonPer = 1; }
     Yer = RTC.year - TRyear;
+    DayInc = Dey;
   }
   }
 
@@ -404,7 +398,7 @@ void StartFan() // включение и отключение вентилято
       FlagTempFan = 0;
     }
   }
-   if (FanWorkFlag == 1) {
+  if (FanWorkFlag == 1) {
     switch (FlagTimeFan) {
     case 1: {
       if ((currentMillis - TimeFaning) > TimeFaningInterval) {
@@ -430,7 +424,7 @@ void StartHot()                                                     // вклю�
   analogWrite(PinHot, Output);
   lcd.setCursor(19, 0);
   lcd.print("\5");
-   
+  
 }
   else
   {
@@ -441,20 +435,21 @@ void StartHot()                                                     // вклю�
       {
         lcd.setCursor(19, 0);
         lcd.print(" ");
-          }
+      }
     }
   }
 }
 void StartHum()
 { 
-  if(Dey == IncreaseDayHumiditiIncubation && IDHI == 0)HumiditiIncubation *=KHumiditiIncubation/100; delay (100); IDHI=1; DDHI=0;  BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);       delay(100);    // запись дельты влажности инкубации в ячейку "4" банка "bank"
-  if(Dey == DecreaseDayHumiditiIncubation && DDHI == 0)HumiditiIncubation /=KHumiditiIncubation/100; delay (100); IDHI=0; DDHI=1;  BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);       delay(100);    // запись дельты влажности инкубации в ячейку "4" банка "bank"
+  if(Dey == IncreaseDayHumiditiIncubation && IDHI == 0)HumiditiIncubation *=KHumiditiIncubation/100; delay (100); IDHI=1; DDHI=0;  BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);       delay(25);    // запись дельты влажности инкубации в ячейку "4" банка "bank"
+  if(Dey == DecreaseDayHumiditiIncubation && DDHI == 0)HumiditiIncubation /=KHumiditiIncubation/100; delay (100); IDHI=0; DDHI=1;  BS = BankSave * 20 + 4;     EEPROM.write(BS, HumiditiIncubation);       delay(25);    // запись дельты влажности инкубации в ячейку "4" банка "bank"
   if (hum < (HumiditiIncubation - (deltaHumiditiIncubation / 2)))
   {
     digitalWrite(PinHum, LOW);
     lcd.setCursor(19, 1);
     lcd.print("\7");
-     }
+  
+  }
   else
   {
     if (hum >(HumiditiIncubation + (deltaHumiditiIncubation / 2)))
@@ -462,7 +457,8 @@ void StartHum()
       digitalWrite(PinHum, HIGH);
       lcd.setCursor(19, 1);
       lcd.print(" ");
-         }
+
+    }
   }
 }
 void TempRead()                                                     // Чтение температуры с датчика DS18b20
@@ -471,26 +467,22 @@ void TempRead()                                                     // Чтен�
   {
     ds18b20readMillis = currentMillis;
     sensors.requestTemperatures();                 // Запрос на измерение температуры (1-й ошибочный)
-    delay(100);                                   // Задержка перед поторным измерением
+    delay(25);                                   // Задержка перед поторным измерением
     sensors.requestTemperatures();                 // Запрос на измерение температуры (повторный)
     double T1 = double(sensors.getTempCByIndex(0));   // Получаем значение температуры
-    Serial.print("T1 = ");  Serial.println(T1);     
     double T2 = double(sensors.getTempCByIndex(1));   // Получаем значение температуры
-    Serial.print("T2 = ");  Serial.println(T2); 
-    Tnow = T1;
-    if (T1 <= -50) Tnow = T2;
-    if (T2 <= -50) Tnow = T1;
-    else Tnow = ( T1 + T2 ) / 2;Serial.print("Tnow = ");  Serial.println(Tnow); 
-}
+    Serial.println(T1);Serial.println(T2);
+    if (T1 <= (-50)) Tnow = T2;
+    if (T2 <= (-50)) Tnow = T1;
+    else Tnow = ( T1 + T2 ) / 2;
+    }
 }
 void HumRead_DHT22()
 {
   if (currentMillis - dht22readMillis > dht22interval)
   {
-    
     dht22readMillis = currentMillis;
     hum = dht.readHumidity();
-    //Serial.print("hum = ");  //Serial.println(hum); 
    
   }
 }
@@ -498,7 +490,7 @@ void Rotating()                                    // процедура пер�
 {
 label_1:
   buttons_Limit_Swith1 = analogRead(PinButtonsLimit1);  buttons_Limit_Swith2 = analogRead(buttons_Limit_Swith2);  delay(200);
-   if (buttons_Limit_Swith1 < 50 || buttons_Limit_Swith2 < 50) buttons_Limit_Swith = 1;  else buttons_Limit_Swith = 0; // если хотябы один из конечников замкнут то button_Limit_Swith = 1
+  if (buttons_Limit_Swith1 < 50 || buttons_Limit_Swith2 < 50) buttons_Limit_Swith = 1;  else buttons_Limit_Swith = 0; // если хотябы один из конечников замкнут то button_Limit_Swith = 1
   if (buttons_Limit_Swith == 1)
   {
     //---------------------------------------------------------------------------------------------------------------------------//
@@ -506,10 +498,10 @@ label_1:
     //---------------------------------------------------------------------------------------------------------------------------//
     PressKeyMenu();  if (PressingButtons == 5) goto label_3;          // проверка нажатия кнопки запуска/остановки переворота лотка
     if (Rotate == 1) {
-      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(0, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(0, 200);
     }
     else if (Rotate == 0) {
-      lcd.setCursor(0, 3);  lcd.print("start rotate EGG"); motor.drive_motor(1, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG"); motor.drive_motor(1, 200);
     }goto label_3;
   }
 label_2:
@@ -521,10 +513,10 @@ label_2:
     //---------------------------------------------------------------------------------------------------------------------------//
     PressKeyMenu();  if (PressingButtons == 5) goto label_3;          // проверка нажатия кнопки запуска/остановки переворота лотка
     if (Rotate == 1) {
-      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(0, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(0, 200);
     }
     else if (Rotate == 0) {
-      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(1, speed);
+      lcd.setCursor(0, 3);  lcd.print("start rotate EGG");  motor.drive_motor(1, 200);
     }goto label_3;
   }
   else
@@ -538,14 +530,11 @@ void timerot()                                                             // в
 {
   if (TimeRotations != 0)
   {
-    
     int ti = 24 / TimeRotations;
     for (int t = 0; t < 24; t = t + ti)
     {
-       
-      if (RTC.hour == t && RTC.minute ==  0)
+       if (RTC.hour == t && RTC.minute ==  0)
       {
-        
         if (tf == 0) Rotating();tf = 1;
         if (tf == 1)break; 
       }
@@ -556,31 +545,28 @@ void timerot()                                                             // в
     tf = 0;
   }
 } 
-void Power()
-{
-   voltage = analogRead(14)* CellVoltage / 255; 
-   power = voltage / CellVoltage  * 100;       lcd.setCursor(2, 13);  lcd.print(power);lcd.print("%");
-   netpower = digitalRead(9);
-  }
+
 void Esp()
 {
-  Power();
+  voltage = analogRead(14) * 1.1 * 12 / 255; 
+  netpower = digitalRead(9);
+  DayInc = currentMillis /1000 / 60 / 60 /24 ;
   Serial.println("1");                                           //Start == 001
- lcd.setCursor(19, 3); lcd.print("\8");       
-  Serial.println("Tnow");  Serial.println(Tnow);    delay(150);                   
-  Serial.println("TempIncubations"); Serial.println(TempIncubations);     delay(150);           
-  Serial.println("hum");  Serial.println(hum);    delay(150);                               
-  Serial.println("HumiditiIncubation");  Serial.println(HumiditiIncubation);  delay(150);          
-  Serial.println("Dey");   Serial.println(Dey);   delay(150);                               
-  Serial.println("Voltage");   Serial.println(voltage);  delay(150);                                 
-  Serial.println("NetPower");   Serial.println(netpower);   delay(150);                              
+  lcd.setCursor(18, 3); lcd.print("/8");       
+  Serial.println("Tnow");  Serial.println(Tnow);                       
+  Serial.println("TempIncubations"); Serial.println(TempIncubations);    
+  Serial.println("hum");  Serial.println(hum);                        
+  Serial.println("HumiditiIncubation");  Serial.println(HumiditiIncubation); 
+  Serial.println("Dey");   Serial.println(Dey);                     
+  Serial.println("Voltage");   Serial.println(voltage);                   
+  Serial.println("NetPower");   Serial.println(netpower);                   
   }
 
 void loop()
-{
+{ 
   PressingButtons = 0;
   currentMillis = millis();
-  RTC.getTime();
+   RTC.getTime();
   if (FlagMenu == 0)
   {
     NOWyear = RTC.year; NOWmonth = RTC.month; NOWday = RTC.day; NOWhour = RTC.hour; NOWminute = RTC.minute; NOWsecond = RTC.second;
@@ -589,7 +575,7 @@ void loop()
   {
     PressKeyMenu();
     switch (PressingButtons) {
-    case 1: {                                                                                                       // обработка события нажатия кнопки "МЕНЮ"
+    case 1: {                                                                                                        // обработка события нажатия кнопки "МЕНЮ"
       if ((MainMenu == 0 && SubMenu == 0) || (MainMenu == 0 && SubMenu == 1)) { MainMenu = 1;  SubMenu = 0;  StartMillis = currentMillis;  delay(200); }
       else {
         if (MainMenu == 4 && SubMenu == 0) { PreSetTime(); SubMenu = 1; StartMillis = currentMillis;  delay(200); }
@@ -602,7 +588,7 @@ void loop()
         }
       }break; }
     case 2: {                                                                                                        // обработка события нажатия кнопки "ВВЕРХ"
-      if (MainMenu != 0 && SubMenu == 0) { MainMenu--;  StartMillis = currentMillis;  delay(200);  if (MainMenu < 1)  MainMenu = 6;}
+      if (MainMenu != 0 && SubMenu == 0) { MainMenu--;  StartMillis = currentMillis;  delay(200);  if (MainMenu < 1)  MainMenu = 6; }
       else {
         if (MainMenu == 1 && SubMenu != 0 && FlagMenu == 0) { SubMenu--;  StartMillis = currentMillis;  delay(200);  if (SubMenu < 1)  SubMenu = 9; }
         else {
@@ -614,22 +600,21 @@ void loop()
               else {
                 if (MainMenu == 1 && FlagMenu == 1) {
                   switch (SubMenu) {
-                  case 1: { TempIncubations = TempIncubations + FadeAmountTemp;                    StartMillis = currentMillis; if (TempIncubations >= maxTempIncubationsDanger)TempIncubations = maxTempIncubationsDanger;      delay(200);  break; }
-                  case 2: { consKp = consKp + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(200); EEPROM.write(104,consKp);  break; }
-                  case 3: { consKi = consKi + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(200); EEPROM.write(105,consKi);  break; }
-                  case 4: { consKd = consKd + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(200); EEPROM.write(106,consKd);  break; }
-                  case 5: { deltaTIncubations = deltaTIncubations + FadeAmountTemp;                StartMillis = currentMillis; if (deltaTIncubations >= maxdeltaTIncubations)deltaTIncubations = maxdeltaTIncubations;        delay(200);  break; }
-                  case 6: { HumiditiIncubation = HumiditiIncubation + FadeAmountHum;               StartMillis = currentMillis; if (HumiditiIncubation >= MaximumHumiditiIncubation)HumiditiIncubation = MaximumHumiditiIncubation;  delay(200);  break; }
-                  case 7: { deltaHumiditiIncubation = deltaHumiditiIncubation + FadeAmountdeltaHum; StartMillis = currentMillis; if (deltaHumiditiIncubation >= maxdeltaHum)deltaHumiditiIncubation = maxdeltaHum;           delay(200);  break; }
-                  case 8: { DecreaseDayHumiditiIncubation = DecreaseDayHumiditiIncubation + 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation >= MaximumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MaximumDecreaseDayHumiditiIncubation;           delay(200);  break; }
-                  case 9: { IncreaseDayHumiditiIncubation = IncreaseDayHumiditiIncubation + 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation >= MaximumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MaximumIncreaseDayHumiditiIncubation;           delay(200);  break; }
+                  case 1: {  TempIncubations = TempIncubations + FadeAmountTemp;                    StartMillis = currentMillis; if (TempIncubations >= maxTempIncubationsDanger)TempIncubations = maxTempIncubationsDanger;      delay(200);  break; }
+                  case 2: {  consKp = consKp + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(200); EEPROM.write(104,consKp);  break; }
+                  case 3: {  consKi = consKi + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(200); EEPROM.write(105,consKi);  break; }
+                  case 4: {  consKd = consKd + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(200); EEPROM.write(106,consKd);  break; }
+                  case 5: {  deltaTIncubations = deltaTIncubations + FadeAmountTemp;                StartMillis = currentMillis; if (deltaTIncubations >= maxdeltaTIncubations)deltaTIncubations = maxdeltaTIncubations;        delay(200);  break; }
+                  case 6: {  HumiditiIncubation = HumiditiIncubation + FadeAmountHum;               StartMillis = currentMillis; if (HumiditiIncubation >= MaximumHumiditiIncubation)HumiditiIncubation = MaximumHumiditiIncubation;  delay(200);  break; }
+                  case 7: {  deltaHumiditiIncubation = deltaHumiditiIncubation + FadeAmountdeltaHum; StartMillis = currentMillis; if (deltaHumiditiIncubation >= maxdeltaHum)deltaHumiditiIncubation = maxdeltaHum;           delay(200);  break; }
+                  case 8: {  DecreaseDayHumiditiIncubation = DecreaseDayHumiditiIncubation + 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation >= MaximumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MaximumDecreaseDayHumiditiIncubation;           delay(200);  break; }
+                  case 9: {  IncreaseDayHumiditiIncubation = IncreaseDayHumiditiIncubation + 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation >= MaximumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MaximumIncreaseDayHumiditiIncubation;           delay(200);  break; }
                   case 10: { KHumiditiIncubation = KHumiditiIncubation + 1; StartMillis = currentMillis; if (KHumiditiIncubation >= MaximumKHumiditiIncubation)KHumiditiIncubation = MaximumKHumiditiIncubation;           delay(200);  break; }
                   case 11: { i++;  if (i > 8)  i = 0;  TimeRotations = RotationPerDay[i];         StartMillis = currentMillis;                                                                                                     delay(200);  break; }
                   case 12: { maxTempFanStart = maxTempFanStart + FadeAmountTemp;                    StartMillis = currentMillis; if (maxTempFanStart >= maxTempFanStartMenuMax)maxTempFanStart = maxTempFanStartMenuMax;        delay(200);  break; }
                   case 13: { TimeFanWork = TimeFanWork + FadeTimeFanWork; StartMillis = currentMillis; if (TimeFanWork >= maxTimeFanWork) TimeFanWork = maxTimeFanWork; TimeFaningInterval = TimeFanWork * 1000;  delay(200);  break; }
                   case 14: { TimeIntervalFanWork = TimeIntervalFanWork + FadeTimeIntervalFanWork; StartMillis = currentMillis; if (TimeIntervalFanWork >= maxTimeIntervalFanWork)TimeIntervalFanWork = maxTimeIntervalFanWork; TimeIntervalFaningInterval = TimeIntervalFanWork * 60000; delay(200);  break; }
-                  case 15: { CellVoltage = CellVoltage + 0.01; StartMillis = currentMillis; if (CellVoltage >= 600)CellVoltage = 600;  delay(200); EEPROM.write(108,CellVoltage);  break; }
-                  case 16: { StartMillis = currentMillis; if (FanWorkFlag == 0) FanWorkFlag = 1; else if (FanWorkFlag == 1) FanWorkFlag = 0; delay(100);break; }
+                  case 15: { StartMillis = currentMillis; if (FanWorkFlag == 0) FanWorkFlag = 1; else if (FanWorkFlag == 1) FanWorkFlag = 0; delay(25);break; }
                   }
                 }
                 else {
@@ -647,17 +632,10 @@ void loop()
                         case 6: {  NOWsecond++;  if (NOWsecond > 59)  NOWsecond = 59;  delay(200);  GoSetTime(NOWsecond);  break; }
                         }
                       }
-                      else {
-                        if (MainMenu == 5 && FlagMenu == 1) {
-                          switch (SubMenu) {
-                          case 1: {  k++; if (k > 3) k = 3; PinHot = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(100, PinHot); delay(100);break; }
-                          case 2: {  k++; if (k > 3) k = 3; PinFan = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(101, PinFan); delay(100);break; }
-                          case 3: {  k++; if (k > 3) k = 3; PinHum = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(102, PinHum); delay(100);break; }}
-                        }
-                        else {
-                          if (MainMenu == 6 && FlagMenu == 1) {
+                       else {
+                          if (MainMenu == 5 && FlagMenu == 1) {
                             switch (SubMenu) {
-                            case 1: {  delay(100);break; }
+                            case 1: {  delay(25);break; }
                             case 2: {  if (TIFlagd == 0)   TIFlagd = 1;                      else if (TIFlagd == 1) TIFlagd = 0; EEPROM.write(110, TIFlagd); delay(200); break; }
                             case 3: {  if (TIFlagf == 0) { TIFlagf = 1; RASEEPROMSTimer(); } else if (TIFlagf == 1) TIFlagf = 0; EEPROM.write(111, TIFlagf); delay(200); break; }
                             }
@@ -671,9 +649,9 @@ void loop()
             }
           }
         }
-      }break; }
+      }break;
     case 3: {                                                                                                        // обработка события нажатия кнопки "ВНИЗ"
-      if (MainMenu != 0 && SubMenu == 0) { MainMenu++;  StartMillis = currentMillis;  delay(200);  if (MainMenu > 6)  MainMenu = 1;}
+      if (MainMenu != 0 && SubMenu == 0) { MainMenu++;  StartMillis = currentMillis;  delay(200);  if (MainMenu > 6)  MainMenu = 1; }
       else {
         if (MainMenu == 1 && SubMenu != 0 && FlagMenu == 0) { SubMenu++;  StartMillis = currentMillis;  delay(200);  if (SubMenu > 9)  SubMenu = 1; }
         else {
@@ -686,21 +664,20 @@ void loop()
                 if (MainMenu == 1 && FlagMenu == 1) {
                   switch (SubMenu) {
                   case 1: {  TempIncubations = TempIncubations - FadeAmountTemp;                      StartMillis = currentMillis;  if (TempIncubations <= minTempIncubationsDanger)  TempIncubations = minTempIncubationsDanger;      delay(200);  break; }
-                  case 2: { consKp = consKp - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(104,consKp); break; }
-                  case 3: { consKi = consKi - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(105,consKi); break; }
-                  case 4: { consKd = consKd - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(106,consKd); break; }
+                  case 2: {  consKp = consKp - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(104,consKp); break; }
+                  case 3: {  consKi = consKi - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(105,consKi); break; }
+                  case 4: {  consKd = consKd - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(106,consKd); break; }
                   case 5: {  deltaTIncubations = deltaTIncubations - FadeAmountTemp;                  StartMillis = currentMillis;  if (deltaTIncubations <= mindeltaTIncubations)  deltaTIncubations = mindeltaTIncubations;        delay(200);  break; }
                   case 6: {  HumiditiIncubation = HumiditiIncubation - FadeAmountHum;                 StartMillis = currentMillis;  if (HumiditiIncubation <= MinimumHumiditiIncubation)  HumiditiIncubation = MinimumHumiditiIncubation;  delay(200);  break; }
                   case 7: {  deltaHumiditiIncubation = deltaHumiditiIncubation - FadeAmountdeltaHum;  StartMillis = currentMillis;  if (deltaHumiditiIncubation <= mindeltaHum)  deltaHumiditiIncubation = mindeltaHum;           delay(200);  break; }
-                  case 8: { DecreaseDayHumiditiIncubation = DecreaseDayHumiditiIncubation - 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation <= MinimumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MinimumDecreaseDayHumiditiIncubation;           delay(200);  break; }
-                  case 9: { IncreaseDayHumiditiIncubation = IncreaseDayHumiditiIncubation - 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation <= MinimumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MinimumIncreaseDayHumiditiIncubation;           delay(200);  break; }
+                  case 8: {  DecreaseDayHumiditiIncubation = DecreaseDayHumiditiIncubation - 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation <= MinimumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MinimumDecreaseDayHumiditiIncubation;           delay(200);  break; }
+                  case 9: {  IncreaseDayHumiditiIncubation = IncreaseDayHumiditiIncubation - 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation <= MinimumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MinimumIncreaseDayHumiditiIncubation;           delay(200);  break; }
                   case 10: { KHumiditiIncubation = KHumiditiIncubation - 1; StartMillis = currentMillis; if (KHumiditiIncubation <= MinimumKHumiditiIncubation)KHumiditiIncubation = MinimumKHumiditiIncubation;           delay(200);  break; }
-                  case 11: {  i--;  if (i < 0)  i = 8;  TimeRotations = RotationPerDay[i];            StartMillis = currentMillis;                                                                                                           delay(200);  break; }
-                  case 12: {  maxTempFanStart = maxTempFanStart - FadeAmountTemp;                      StartMillis = currentMillis;  if (maxTempFanStart <= maxTempFanStartMenuMin)  maxTempFanStart = maxTempFanStartMenuMin;        delay(200);  break; }
-                  case 13: {  TimeIntervalFanWork = TimeIntervalFanWork - FadeTimeIntervalFanWork;     StartMillis = currentMillis;  if (TimeIntervalFanWork <= minTimeIntervalFanWork)  TimeIntervalFanWork = minTimeIntervalFanWork;  TimeIntervalFaningInterval = TimeIntervalFanWork * 60000;   delay(200);  break; }
-                  case 14: {  TimeFanWork = TimeFanWork - FadeTimeFanWork;                             StartMillis = currentMillis;  if (TimeFanWork <= minTimeFanWork)  TimeFanWork = minTimeFanWork; TimeFaningInterval = TimeFanWork * 1000; delay(200);  break; }
-                  case 15: { CellVoltage = CellVoltage - 0.01; StartMillis = currentMillis; if (CellVoltage <= 0)CellVoltage = 0;  delay(200); EEPROM.write(108,CellVoltage);  break; }
-                  case 16: { StartMillis = currentMillis; if (FanWorkFlag == 0) FanWorkFlag = 1; else if (FanWorkFlag == 1) FanWorkFlag = 0; delay(100);break; }
+                  case 11: { i--;  if (i < 0)  i = 8;  TimeRotations = RotationPerDay[i];            StartMillis = currentMillis;                                                                                                           delay(200);  break; }
+                  case 12: { maxTempFanStart = maxTempFanStart - FadeAmountTemp;                      StartMillis = currentMillis;  if (maxTempFanStart <= maxTempFanStartMenuMin)  maxTempFanStart = maxTempFanStartMenuMin;        delay(200);  break; }
+                  case 13: { TimeIntervalFanWork = TimeIntervalFanWork - FadeTimeIntervalFanWork;     StartMillis = currentMillis;  if (TimeIntervalFanWork <= minTimeIntervalFanWork)  TimeIntervalFanWork = minTimeIntervalFanWork;  TimeIntervalFaningInterval = TimeIntervalFanWork * 60000;   delay(200);  break; }
+                  case 14: { TimeFanWork = TimeFanWork - FadeTimeFanWork;                             StartMillis = currentMillis;  if (TimeFanWork <= minTimeFanWork)  TimeFanWork = minTimeFanWork; TimeFaningInterval = TimeFanWork * 1000; delay(200);  break; }
+                  case 15: { StartMillis = currentMillis; if (FanWorkFlag == 0) FanWorkFlag = 1; else if (FanWorkFlag == 1) FanWorkFlag = 0; delay(25);break; }
                   }
                 }
                 else {
@@ -719,18 +696,9 @@ void loop()
                         }
                       }
                       else {
-                        if (MainMenu == 5 && FlagMenu == 1) {
-                          switch (SubMenu) {
-                          case 1: {  k--; if (k <= 0) k = 0; PinHot = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(100, PinHot); delay(100);break; }
-                          case 2: {  k--; if (k <= 0) k = 0; PinFan = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(101, PinFan); delay(100);break; }
-                          case 3: {  k--; if (k <= 0) k = 0; PinHum = OutputPin[k]; StartMillis = currentMillis; delay(200); EEPROM.write(102, PinHum); delay(100);break; }
-                        
-                          }
-                        }
-                        else {
-                          if (MainMenu == 6 && FlagMenu == 1) {
+                          if (MainMenu == 5 && FlagMenu == 1) {
                             switch (SubMenu) {
-                            case 1: {  StartMillis = currentMillis; delay(100);break; }
+                            case 1: {  StartMillis = currentMillis; delay(25);break; }
                             case 2: {  StartMillis = currentMillis; if (TIFlagd == 0)   TIFlagd = 1;                      else if (TIFlagd == 1) TIFlagd = 0; EEPROM.write(110, TIFlagd); delay(200); break; }
                             case 3: {  StartMillis = currentMillis; if (TIFlagf == 0) { TIFlagf = 1; RASEEPROMSTimer(); } else if (TIFlagf == 1) TIFlagf = 0; EEPROM.write(111, TIFlagf); delay(200); break; }
                             }
@@ -744,27 +712,27 @@ void loop()
             }
           }
         }
-      }break; }
-    case 4: {                                                                                                        // обработка события нажатия кнопки "ВЫБОР"
+      break;} 
+    case 4:  {                                                                                                      // обработка события нажатия кнопки "ВЫБОР"
       if (MainMenu == 0 && SubMenu == 0) { MainMenu = 0;  SubMenu = 1;  delay(200); }
       else {
         if (MainMenu == 0 && SubMenu == 1) { MainMenu = 0;  SubMenu = 0;  delay(200); }
-        //else {  if ( MainMenu == 2 && SubMenu == 1 ) { SaveToEEPROM ( bank ); lcd.setCursor(0, 1); lcd.print( "    saving...   " ); }
-        //else {  if ( MainMenu == 3 && SubMenu == 1 ) { LoadFromEEPROM ( bank ); lcd.setCursor(0, 1); lcd.print( "    loading...  " ); }
         else {
           if (MainMenu != 0 && SubMenu != 0 && FlagMenu == 0) { FlagMenu = 1;  delay(200); }
           else { if (MainMenu != 0 && SubMenu != 0 && FlagMenu == 1) { FlagMenu = 0;  delay(200); } }
         }
       }
-      break; }
-    case 5: {                                                                                              // обработка события нажатия кнопки "ПЕРЕВОРОТ"
+        break; }
+    case 5: {                                                                                                        // обработка события нажатия кнопки "ПЕРЕВОРОТ"
       Rotating();
       break; }
-    }
+  }
     switch (MainMenu) {
     case 0:      // главное меню "0"
-            m = 0; break;  // вывод на экран главного меню "0" подменю "0"
-
+      switch (SubMenu) {
+      case 0:  m = 0; break;  // вывод на экран главного меню "0" подменю "0"
+      } 
+      break;
     case 1:      // главное меню "1"
       switch (SubMenu) {
       case 0:  m = 10; break;  // вывод на экран главного меню "1" подменю "0"
@@ -783,8 +751,7 @@ void loop()
       case 13:  m = 113; break; // вывод на экран главного меню "1" подменю "13"
       case 14:  m = 114; break; // вывод на экран главного меню "1" подменю "14"
       case 15:  m = 115; break; // вывод на экран главного меню "1" подменю "15"
-      case 16:  m = 116; break; // вывод на экран главного меню "1" подменю "16"
-      } 
+       } 
       break;
     case 2:      // главное меню "2"
       switch (SubMenu) {
@@ -817,13 +784,6 @@ void loop()
       case 3:  m = 53; break;
       } // вывод на экран главного меню "5" подменю "3"
       break;
-    case 6:
-      switch (SubMenu) {
-      case 0:  m = 60; break;  // вывод на экран главного меню "6" подменю "0"
-      case 1:  m = 61; break;  // вывод на экран главного меню "6" подменю "1"
-      case 2:  m = 62; break;  // вывод на экран главного меню "6" подменю "2"
-      case 3:  m = 63; break;
-      } // вывод на экран главного меню "6" подменю "3"
     }
 
     if (MainMenu == 4 && SubMenu != 0) {}
@@ -837,48 +797,44 @@ void loop()
         }
       }
     }
-  }
+
   switch (m) {
-  case 0: {  lcd.clear();lcd.setCursor(0, 0);  lcd.print("T="); lcd.print(Tnow); lcd.print("\3(");lcd.print(TempIncubations);    lcd.print("\3)");  
+  case 0: {  lcd.clear();lcd.setCursor(0, 0);  lcd.print("T="); lcd.print(Tnow); lcd.print("\3 (");lcd.print(TempIncubations);    lcd.print("\3)");  
              lcd.setCursor(0, 1);  lcd.print("H="); lcd.print(hum);  lcd.print("%("); lcd.print(HumiditiIncubation); lcd.print("%)");lcd.print("Bat="); lcd.print(power);
-             lcd.setCursor(0, 2);  lcd.print("Day="); lcd.print(Dey);
+             lcd.setCursor(0, 2);  lcd.print("Day = ");lcd.print(DayInc);
             if (RTC.hour < 10) lcd.print(0); lcd.print(RTC.hour); lcd.print(":"); if (RTC.minute < 10) lcd.print(0); lcd.print(RTC.minute); lcd.print(":"); if (RTC.second < 10) lcd.print(0); lcd.print(RTC.second);
               TempRead(); HumRead_DHT22();StartFan();  StartHot();  StartHum(); timerot();TimerCalculatePrint();Esp();FlagMenu = 0;             break; }
-  case 10: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("    Setting     ")); lcd.setCursor(0, 2); lcd.print(F("   incubation   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(100);FlagMenu = 0;             break; }
-  case 11: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Temperature inc ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(TempIncubations);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 12: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K p     ")); lcd.setCursor(0, 1); lcd.print(F("P = ")); lcd.print(consKp);                                            PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 13: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K i     ")); lcd.setCursor(0, 1); lcd.print(F("I = ")); lcd.print(consKi);                                            PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 14: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K d     ")); lcd.setCursor(0, 1); lcd.print(F("D = ")); lcd.print(consKd);                                            PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 15: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("    Delta T     ")); lcd.setCursor(0, 1); lcd.print(F("\4t = ")); lcd.print(deltaTIncubations);      lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 16: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   Humiditi     ")); lcd.setCursor(0, 1); lcd.print(F("H = ")); lcd.print(HumiditiIncubation);     lcd.print("%                 ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 17: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("    Delta H     ")); lcd.setCursor(0, 1); lcd.print(F("\4h = ")); lcd.print(deltaHumiditiIncubation); lcd.print("%                 ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 18: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" Day Decrease H ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(DecreaseDayHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 19: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" Day Increase H ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(IncreaseDayHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 110: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("     Factor H   ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(KHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 111: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  Rotate Egg    ")); lcd.setCursor(0, 1);                                  lcd.print(TimeRotations);     lcd.print(" times per day    ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 112: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   Cooling T    ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(maxTempFanStart);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 113: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" CO2 faning time")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeFanWork);            lcd.print(" sec. ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 114: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("CO2 fan interval")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeIntervalFanWork);    lcd.print(" min. ");                                      PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 115: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   CO2 faning   ")); lcd.setCursor(0, 1); if (FanWorkFlag == 0) lcd.print("       OFF      "); else if (FanWorkFlag == 1) lcd.print("     IS ON      ");                       PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 116: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" Cell Voltage  ")); lcd.setCursor(0, 1);lcd.print("U = ");lcd.print(CellVoltage);                        PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 20: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("  Save setting  ")); lcd.setCursor(0, 2); lcd.print(F("   to  EEPROM   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(100);FlagMenu = 0;             break; }
-  case 21: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Save setting to ")); lcd.setCursor(0, 1); lcd.print(F("bank ")); lcd.print(bank); if (FlagMenu == 0) { lcd.print(" press set"); delay(100);} else { SaveToEEPROM(bank); lcd.print(" saving...");      delay(100);}                          break; }
-  case 30: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("  Load setting  ")); lcd.setCursor(0, 2); lcd.print(F("  from  EEPROM  ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(100);FlagMenu = 0;             break; }
-  case 31: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Load setting from")); lcd.setCursor(0, 1); lcd.print(F("bank ")); lcd.print(bank); if (FlagMenu == 0) { lcd.print(" press set"); delay(100);} else { LoadFromEEPROM(bank); lcd.print(" loading..");    delay(100);}                          break; }
-  case 40: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("      Time      ")); lcd.setCursor(0, 2); lcd.print(F("     setting    ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(100);FlagMenu = 0;             break; }
-  case 41: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup  year   ")); lcd.setCursor(5, 1);                                  lcd.print(Setyear);                                                                                     PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 42: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup  month  ")); lcd.setCursor(6, 1);                                  lcd.print(Setmonth);                                                                                     PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 43: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   setup  day   ")); lcd.setCursor(6, 1);                                  lcd.print(Setday);                                                                                     PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 44: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup  hour   ")); lcd.setCursor(6, 1);                                  lcd.print(Sethour);                                                                                     PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 45: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup minute  ")); lcd.setCursor(6, 1);                                  lcd.print(Setminute);                                                                                     PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 46: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup second  ")); lcd.setCursor(6, 1);                                  lcd.print(Setsecond);                                                                                     PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 50: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" setting  relay ")); lcd.setCursor(0, 1); lcd.print("     output     "); lcd.setCursor(15, 1);  lcd.print("\1");                                                                                                delay(100);FlagMenu = 0;             break; }
-  case 51: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" hotting  swith ")); lcd.setCursor(0, 1); lcd.print("in relay No="); int DispRelay = PinHot - 1;      if (DispRelay < 1) lcd.print("OFF"); else  lcd.print(DispRelay);  PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 52: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" colling  swith ")); lcd.setCursor(0, 1); lcd.print("in relay No="); int DispRelay = PinFan - 1;       if (DispRelay < 1) lcd.print("OFF"); else  lcd.print(DispRelay);  PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 53: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" humiditi swith ")); lcd.setCursor(0, 1); lcd.print("in relay No="); int DispRelay = PinHum - 1;       if (DispRelay < 1) lcd.print("OFF"); else  lcd.print(DispRelay);  PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 60: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("     Timer      ")); lcd.setCursor(0, 2); lcd.print("   incubation   "); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(100);FlagMenu = 0;             break; }
-  case 61: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  reset  timer  ")); PrintMenuWrite(FlagMenu); if (FlagMenu == 0) { lcd.setCursor(0, 1);                 lcd.print("yes - press set ");                                                                   delay(100);} else RASEEPROMSTimer();  break; }
-  case 62: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" display timer  ")); lcd.setCursor(0, 1); if (TIFlagd == 0) lcd.print("       OFF      "); else if (TIFlagd == 1) lcd.print("     IS ON      ");                               PrintMenuWrite(FlagMenu); delay(100);                          break; }
-  case 63: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("     timer      ")); lcd.setCursor(0, 1); if (TIFlagf == 0) lcd.print("       OFF      "); else if (TIFlagf == 1) lcd.print("     IS ON      ");                               PrintMenuWrite(FlagMenu); delay(100);                          break; }
+  case 10: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("    Setting     ")); lcd.setCursor(0, 2); lcd.print(F("   incubation   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
+  case 11: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Temperature inc ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(TempIncubations);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 12: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K p     ")); lcd.setCursor(0, 1); lcd.print(F("P = ")); lcd.print(consKp);                                            PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 13: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K i     ")); lcd.setCursor(0, 1); lcd.print(F("I = ")); lcd.print(consKi);                                            PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 14: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("      K d     ")); lcd.setCursor(0, 1); lcd.print(F("D = ")); lcd.print(consKd);                                            PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 15: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("    Delta T     ")); lcd.setCursor(0, 1); lcd.print(F("\4t = ")); lcd.print(deltaTIncubations);      lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 16: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   Humiditi     ")); lcd.setCursor(0, 1); lcd.print(F("H = ")); lcd.print(HumiditiIncubation);     lcd.print("%                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 17: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("    Delta H     ")); lcd.setCursor(0, 1); lcd.print(F("\4h = ")); lcd.print(deltaHumiditiIncubation); lcd.print("%                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 18: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" Day Decrease H ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(DecreaseDayHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 19: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" Day Increase H ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(IncreaseDayHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 110: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("     Factor H   ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(KHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 111: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  Rotate Egg    ")); lcd.setCursor(0, 1);                                  lcd.print(TimeRotations);     lcd.print(" times per day    ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 112: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   Cooling T    ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(maxTempFanStart);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 113: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" CO2 faning time")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeFanWork);            lcd.print(" sec. ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 114: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("CO2 fan interval")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeIntervalFanWork);    lcd.print(" min. ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 115: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   CO2 faning   ")); lcd.setCursor(0, 1); if (FanWorkFlag == 0) lcd.print("       OFF      "); else if (FanWorkFlag == 1) lcd.print("     IS ON      ");                       PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 20: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("  Save setting  ")); lcd.setCursor(0, 2); lcd.print(F("   to  EEPROM   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
+  case 21: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Save setting to ")); lcd.setCursor(0, 1); lcd.print(F("bank ")); lcd.print(bank); if (FlagMenu == 0) { lcd.print(" press set"); delay(25);} else { SaveToEEPROM(bank); lcd.print(" saving...");      delay(25);}                          break; }
+  case 30: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  Load setting  ")); lcd.setCursor(0, 2); lcd.print(F("  from  EEPROM  ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
+  case 31: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Load setting from")); lcd.setCursor(0, 1); lcd.print(F("bank ")); lcd.print(bank); if (FlagMenu == 0) { lcd.print(" press set"); delay(25);} else { LoadFromEEPROM(bank); lcd.print(" loading..");    delay(25);}                          break; }
+  case 40: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("      Time      ")); lcd.setCursor(0, 2); lcd.print(F("     setting    ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
+  case 41: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup  year   ")); lcd.setCursor(5, 1);                                  lcd.print(Setyear);                                                                                     PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 42: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup  month  ")); lcd.setCursor(6, 1);                                  lcd.print(Setmonth);                                                                                     PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 43: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   setup  day   ")); lcd.setCursor(6, 1);                                  lcd.print(Setday);                                                                                     PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 44: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup  hour   ")); lcd.setCursor(6, 1);                                  lcd.print(Sethour);                                                                                     PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 45: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup minute  ")); lcd.setCursor(6, 1);                                  lcd.print(Setminute);                                                                                     PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 46: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  setup second  ")); lcd.setCursor(6, 1);                                  lcd.print(Setsecond);                                                                                     PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 50: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("     Timer      ")); lcd.setCursor(0, 2); lcd.print("   incubation   "); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
+  case 51: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  reset  timer  ")); PrintMenuWrite(FlagMenu); if (FlagMenu == 0) { lcd.setCursor(0, 1);                 lcd.print("yes - press set ");                                                                   delay(25);} else RASEEPROMSTimer();  break; }
+  case 52: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" display timer  ")); lcd.setCursor(0, 1); if (TIFlagd == 0) lcd.print("       OFF      "); else if (TIFlagd == 1) lcd.print("     IS ON      ");                               PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 53: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("     timer      ")); lcd.setCursor(0, 1); if (TIFlagf == 0) lcd.print("       OFF      "); else if (TIFlagf == 1) lcd.print("     IS ON      ");                               PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  }
   }
   }
