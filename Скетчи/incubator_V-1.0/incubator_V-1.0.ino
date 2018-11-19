@@ -301,9 +301,9 @@ void PressKeyMenu()                                                             
   Serial.print("  Resistant key button module="); Serial.print(buttons_Menu); Serial.println(" ");
   if (buttons_Menu >= 0 && buttons_Menu < 50)  PressingButtons = 1;           // меню       
   else  if (buttons_Menu > 400 && buttons_Menu < 500) PressingButtons = 2;     // вверх       
-  else  if (buttons_Menu > 200 && buttons_Menu < 300) PressingButtons = 3;     // вниз      
+  else  if (buttons_Menu > 100 && buttons_Menu < 300) PressingButtons = 3;     // вниз      
   else  if ( buttons_Menu > 600 && buttons_Menu < 700)PressingButtons = 4;      // выбор      
-  else  if (buttons_Menu > 850 && buttons_Menu < 950) PressingButtons = 5;  // переворот       
+  else  if (buttons_Menu > 800 && buttons_Menu < 900) PressingButtons = 5;  // переворот       
   else  PressingButtons = 0;            
 }
 
