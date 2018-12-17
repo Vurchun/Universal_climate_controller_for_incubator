@@ -301,9 +301,9 @@ void PressKeyMenu()                                                             
   Serial.print("  Resistant key button module="); Serial.print(buttons_Menu); Serial.println(" ");
   if (buttons_Menu >= 0 && buttons_Menu < 50)  PressingButtons = 1;           // меню       
   else  if (buttons_Menu > 400 && buttons_Menu < 500) PressingButtons = 2;     // вверх       
-  else  if (buttons_Menu > 100 && buttons_Menu < 300) PressingButtons = 3;     // вниз      
+  else  if (buttons_Menu > 200 && buttons_Menu < 300) PressingButtons = 3;     // вниз      
   else  if ( buttons_Menu > 600 && buttons_Menu < 700)PressingButtons = 4;      // выбор      
-  else  if (buttons_Menu > 800 && buttons_Menu < 900) PressingButtons = 5;  // переворот       
+  else  if (buttons_Menu > 850 && buttons_Menu < 950) PressingButtons = 5;  // переворот       
   else  PressingButtons = 0;            
 }
 
@@ -472,9 +472,10 @@ void TempRead()                                                     // Чтен�
     double T1 = double(sensors.getTempCByIndex(0));   // Получаем значение температуры
     double T2 = double(sensors.getTempCByIndex(1));   // Получаем значение температуры
     Serial.println(T1);Serial.println(T2);
-    if (T1 <= (-50)) Tnow = T2;
-    if (T2 <= (-50)) Tnow = T1;
-    else Tnow = ( T1 + T2 ) / 2;
+    if (T1 <= -50 ) Tnow = T2;
+    if (T2 <= -50 ) Tnow = T1;
+    if (T2 >= -50 && T1 >= -50) Tnow = ( T1 + T2 ) / 2;
+    else Tnow = TempIncubations - 0.01;
     }
 }
 void HumRead_DHT22()
@@ -664,9 +665,9 @@ void loop()
                 if (MainMenu == 1 && FlagMenu == 1) {
                   switch (SubMenu) {
                   case 1: {  TempIncubations = TempIncubations - FadeAmountTemp;                      StartMillis = currentMillis;  if (TempIncubations <= minTempIncubationsDanger)  TempIncubations = minTempIncubationsDanger;      delay(200);  break; }
-                  case 2: {  consKp = consKp - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(104,consKp); break; }
-                  case 3: {  consKi = consKi - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(105,consKi); break; }
-                  case 4: {  consKd = consKd - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(200); EEPROM.write(106,consKd); break; }
+                  case 2: {  consKp = consKp - 0.01;                    StartMillis = currentMillis; if (consKp <= 0.01)consKp = 0.01;      delay(200); EEPROM.write(104,consKp); break; }
+                  case 3: {  consKi = consKi - 0.01;                    StartMillis = currentMillis; if (consKp <= 0.01)consKp = 0.01;      delay(200); EEPROM.write(105,consKi); break; }
+                  case 4: {  consKd = consKd - 0.01;                    StartMillis = currentMillis; if (consKp <= 0.01)consKp = 0.01;      delay(200); EEPROM.write(106,consKd); break; }
                   case 5: {  deltaTIncubations = deltaTIncubations - FadeAmountTemp;                  StartMillis = currentMillis;  if (deltaTIncubations <= mindeltaTIncubations)  deltaTIncubations = mindeltaTIncubations;        delay(200);  break; }
                   case 6: {  HumiditiIncubation = HumiditiIncubation - FadeAmountHum;                 StartMillis = currentMillis;  if (HumiditiIncubation <= MinimumHumiditiIncubation)  HumiditiIncubation = MinimumHumiditiIncubation;  delay(200);  break; }
                   case 7: {  deltaHumiditiIncubation = deltaHumiditiIncubation - FadeAmountdeltaHum;  StartMillis = currentMillis;  if (deltaHumiditiIncubation <= mindeltaHum)  deltaHumiditiIncubation = mindeltaHum;           delay(200);  break; }
