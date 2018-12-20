@@ -302,7 +302,8 @@ void PressKeyMenu()                                                             
   else  if (buttons_Menu > 100 && buttons_Menu < 300) PressingButtons = 3;     // вниз      
   else  if ( buttons_Menu > 600 && buttons_Menu < 700)PressingButtons = 4;      // выбор      
   else  if (buttons_Menu > 800 && buttons_Menu < 900) PressingButtons = 5;  // переворот       
-  else  PressingButtons = 0;            
+  else  PressingButtons = 0; 
+  delay(100);           
 }
 
 void PreSetTime()
@@ -465,7 +466,7 @@ void TempRead()                                                     // Чтен�
   {
     ds18b20readMillis = currentMillis;
     sensors.requestTemperatures();                 // Запрос на измерение температуры (1-й ошибочный)
-    delay(25);                                   // Задержка перед поторным измерением
+    delay(200);                                   // Задержка перед поторным измерением
     sensors.requestTemperatures();                 // Запрос на измерение температуры (повторный)
     double T1 = double(sensors.getTempCByIndex(0));   // Получаем значение температуры
     double T2 = double(sensors.getTempCByIndex(1));   // Получаем значение температуры
@@ -527,12 +528,12 @@ label_2:
 void timerot()                                                             // вычисление когда переворачивать яйца
 {
   if (TimeRotations != 0)
-  {
+  {Serial.println("Chek1");
     int ti = 24 / TimeRotations;
     for (int t = 0; t < 24; t = t + ti)
-    {
+    {Serial.println("Chek2");
        if (RTC.hour == t && RTC.minute ==  0)
-      {
+      {Serial.println("Chek3");
         if (tf == 0) Rotating();tf = 1;
         if (tf == 1)break; 
       }
@@ -541,7 +542,7 @@ void timerot()                                                             // в
   if (RTC.minute > 0)
   {
     tf = 0;
-  }
+  }Serial.println("Chek4");
 } 
 
 void Esp()
@@ -598,20 +599,20 @@ void loop()
               else {
                 if (MainMenu == 1 && FlagMenu == 1) {
                   switch (SubMenu) {
-                  case 1: {  TempIncubations = TempIncubations + FadeAmountTemp;                    StartMillis = currentMillis; if (TempIncubations >= maxTempIncubationsDanger)TempIncubations = maxTempIncubationsDanger;      delay(25);  break; }
-                  case 2: {  consKp = consKp + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(25); EEPROM.write(131,consKp);  break; }
-                  case 3: {  consKi = consKi + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(25); EEPROM.write(132,consKi);  break; }
-                  case 4: {  consKd = consKd + 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(25); EEPROM.write(133,consKd);  break; }
-                  case 5: {  deltaTIncubations = deltaTIncubations + FadeAmountTemp;                StartMillis = currentMillis; if (deltaTIncubations >= maxdeltaTIncubations)deltaTIncubations = maxdeltaTIncubations;        delay(25);  break; }
-                  case 6: {  HumiditiIncubation = HumiditiIncubation + FadeAmountHum;               StartMillis = currentMillis; if (HumiditiIncubation >= MaximumHumiditiIncubation)HumiditiIncubation = MaximumHumiditiIncubation;  delay(25);  break; }
-                  case 7: {  deltaHumiditiIncubation = deltaHumiditiIncubation + FadeAmountdeltaHum; StartMillis = currentMillis; if (deltaHumiditiIncubation >= maxdeltaHum)deltaHumiditiIncubation = maxdeltaHum;           delay(25);  break; }
-                  case 8: {  DecreaseDayHumiditiIncubation = DecreaseDayHumiditiIncubation + 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation >= MaximumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MaximumDecreaseDayHumiditiIncubation;           delay(25);  break; }
-                  case 9: {  IncreaseDayHumiditiIncubation = IncreaseDayHumiditiIncubation + 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation >= MaximumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MaximumIncreaseDayHumiditiIncubation;           delay(25);  break; }
-                  case 10: { KHumiditiIncubation = KHumiditiIncubation + 1; StartMillis = currentMillis; if (KHumiditiIncubation >= MaximumKHumiditiIncubation)KHumiditiIncubation = MaximumKHumiditiIncubation;           delay(25);  break; }
+                  case 1: {  TempIncubations += FadeAmountTemp;                    StartMillis = currentMillis; if (TempIncubations >= maxTempIncubationsDanger)TempIncubations = maxTempIncubationsDanger;      delay(25);  break; }
+                  case 2: {  consKp += 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(25); EEPROM.write(131,consKp);  break; }
+                  case 3: {  consKi += 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(25); EEPROM.write(132,consKi);  break; }
+                  case 4: {  consKd += 0.01;                    StartMillis = currentMillis; if (consKp >= 100)consKp = 100;      delay(25); EEPROM.write(133,consKd);  break; }
+                  case 5: {  deltaTIncubations += FadeAmountTemp;                StartMillis = currentMillis; if (deltaTIncubations >= maxdeltaTIncubations)deltaTIncubations = maxdeltaTIncubations;        delay(25);  break; }
+                  case 6: {  HumiditiIncubation += FadeAmountHum;               StartMillis = currentMillis; if (HumiditiIncubation >= MaximumHumiditiIncubation)HumiditiIncubation = MaximumHumiditiIncubation;  delay(25);  break; }
+                  case 7: {  deltaHumiditiIncubation += + FadeAmountdeltaHum; StartMillis = currentMillis; if (deltaHumiditiIncubation >= maxdeltaHum)deltaHumiditiIncubation = maxdeltaHum;           delay(25);  break; }
+                  case 8: {  DecreaseDayHumiditiIncubation += 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation >= MaximumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MaximumDecreaseDayHumiditiIncubation;           delay(25);  break; }
+                  case 9: {  IncreaseDayHumiditiIncubation += 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation >= MaximumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MaximumIncreaseDayHumiditiIncubation;           delay(25);  break; }
+                  case 10: { KHumiditiIncubation += 1; StartMillis = currentMillis; if (KHumiditiIncubation >= MaximumKHumiditiIncubation)KHumiditiIncubation = MaximumKHumiditiIncubation;           delay(25);  break; }
                   case 11: { i++;  if (i > 8)  i = 0;  TimeRotations = RotationPerDay[i];         StartMillis = currentMillis;                                                                                                     delay(25);  break; }
-                  case 12: { maxTempFanStart = maxTempFanStart + FadeAmountTemp;                    StartMillis = currentMillis; if (maxTempFanStart >= maxTempFanStartMenuMax)maxTempFanStart = maxTempFanStartMenuMax;        delay(25);  break; }
-                  case 13: { TimeFanWork = TimeFanWork + FadeTimeFanWork; StartMillis = currentMillis; if (TimeFanWork >= maxTimeFanWork) TimeFanWork = maxTimeFanWork; TimeFaningInterval = TimeFanWork * 1000;  delay(25);  break; }
-                  case 14: { TimeIntervalFanWork = TimeIntervalFanWork + FadeTimeIntervalFanWork; StartMillis = currentMillis; if (TimeIntervalFanWork >= maxTimeIntervalFanWork)TimeIntervalFanWork = maxTimeIntervalFanWork; TimeIntervalFaningInterval = TimeIntervalFanWork * 60000; delay(25);  break; }
+                  case 12: { maxTempFanStart += FadeAmountTemp;                    StartMillis = currentMillis; if (maxTempFanStart >= maxTempFanStartMenuMax)maxTempFanStart = maxTempFanStartMenuMax;        delay(25);  break; }
+                  case 13: { TimeFanWork += FadeTimeFanWork; StartMillis = currentMillis; if (TimeFanWork >= maxTimeFanWork) TimeFanWork = maxTimeFanWork; TimeFaningInterval = TimeFanWork * 1000;  delay(25);  break; }
+                  case 14: { TimeIntervalFanWork += FadeTimeIntervalFanWork; StartMillis = currentMillis; if (TimeIntervalFanWork >= maxTimeIntervalFanWork)TimeIntervalFanWork = maxTimeIntervalFanWork; TimeIntervalFaningInterval = TimeIntervalFanWork * 60000; delay(25);  break; }
                   case 15: { StartMillis = currentMillis; if (FanWorkFlag == 0) FanWorkFlag = 1; else if (FanWorkFlag == 1) FanWorkFlag = 0; delay(25);break; }
                   }
                 }
@@ -622,7 +623,7 @@ void loop()
                     else {
                       if (MainMenu == 4 && FlagMenu == 1) {
                         switch (SubMenu) {
-                        case 1: {  NOWyear++;    if (NOWyear > 2030)  NOWyear = 2030;  delay(25);  GoSetTime(NOWyear);  break; }
+                        case 1: {  NOWyear++;    if (NOWyear > 2050)  NOWyear = 2050;  delay(25);  GoSetTime(NOWyear);  break; }
                         case 2: {  NOWmonth++;   if (NOWmonth > 12)   NOWmonth = 12;   delay(25);  GoSetTime(NOWmonth);  break; }
                         case 3: {  NOWday++;     if (NOWday > 31)     NOWday = 31;     delay(25);  GoSetTime(NOWday);  break; }
                         case 4: {  NOWhour++;    if (NOWhour > 23)    NOWhour = 23;    delay(25);  GoSetTime(NOWhour);  break; }
@@ -661,16 +662,16 @@ void loop()
               else {
                 if (MainMenu == 1 && FlagMenu == 1) {
                   switch (SubMenu) {
-                  case 1: {  TempIncubations = TempIncubations - FadeAmountTemp;                      StartMillis = currentMillis;  if (TempIncubations <= minTempIncubationsDanger)  TempIncubations = minTempIncubationsDanger;      delay(25);  break; }
-                  case 2: {  consKp = consKp - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(25); EEPROM.write(131,consKp); break; }
-                  case 3: {  consKi = consKi - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(25); EEPROM.write(132,consKi); break; }
-                  case 4: {  consKd = consKd - 0.01;                    StartMillis = currentMillis; if (consKp <= 100)consKp = 0.01;      delay(25); EEPROM.write(133,consKd); break; }
-                  case 5: {  deltaTIncubations = deltaTIncubations - FadeAmountTemp;                  StartMillis = currentMillis;  if (deltaTIncubations <= mindeltaTIncubations)  deltaTIncubations = mindeltaTIncubations;        delay(25);  break; }
-                  case 6: {  HumiditiIncubation = HumiditiIncubation - FadeAmountHum;                 StartMillis = currentMillis;  if (HumiditiIncubation <= MinimumHumiditiIncubation)  HumiditiIncubation = MinimumHumiditiIncubation;  delay(25);  break; }
-                  case 7: {  deltaHumiditiIncubation = deltaHumiditiIncubation - FadeAmountdeltaHum;  StartMillis = currentMillis;  if (deltaHumiditiIncubation <= mindeltaHum)  deltaHumiditiIncubation = mindeltaHum;           delay(25);  break; }
-                  case 8: {  DecreaseDayHumiditiIncubation = DecreaseDayHumiditiIncubation - 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation <= MinimumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MinimumDecreaseDayHumiditiIncubation;           delay(25);  break; }
-                  case 9: {  IncreaseDayHumiditiIncubation = IncreaseDayHumiditiIncubation - 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation <= MinimumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MinimumIncreaseDayHumiditiIncubation;           delay(25);  break; }
-                  case 10: { KHumiditiIncubation = KHumiditiIncubation - 1; StartMillis = currentMillis; if (KHumiditiIncubation <= MinimumKHumiditiIncubation)KHumiditiIncubation = MinimumKHumiditiIncubation;           delay(25);  break; }
+                  case 1: {  TempIncubations -= FadeAmountTemp;                      StartMillis = currentMillis;  if (TempIncubations <= minTempIncubationsDanger)  TempIncubations = minTempIncubationsDanger;      delay(25);  break; }
+                  case 2: {  consKp -= 0.01;                    StartMillis = currentMillis; if (consKp >= 0.01)consKp = 0.01;      delay(25); EEPROM.write(131,consKp); break; }
+                  case 3: {  consKi -= 0.01;                    StartMillis = currentMillis; if (consKp >= 0.01)consKp = 0.01;      delay(25); EEPROM.write(132,consKi); break; }
+                  case 4: {  consKd -= 0.01;                    StartMillis = currentMillis; if (consKp >= 0.01)consKp = 0.01;      delay(25); EEPROM.write(133,consKd); break; }
+                  case 5: {  deltaTIncubations -= FadeAmountTemp;                  StartMillis = currentMillis;  if (deltaTIncubations <= mindeltaTIncubations)  deltaTIncubations = mindeltaTIncubations;        delay(25);  break; }
+                  case 6: {  HumiditiIncubation -= FadeAmountHum;                 StartMillis = currentMillis;  if (HumiditiIncubation <= MinimumHumiditiIncubation)  HumiditiIncubation = MinimumHumiditiIncubation;  delay(25);  break; }
+                  case 7: {  deltaHumiditiIncubation -= FadeAmountdeltaHum;  StartMillis = currentMillis;  if (deltaHumiditiIncubation <= mindeltaHum)  deltaHumiditiIncubation = mindeltaHum;           delay(25);  break; }
+                  case 8: {  DecreaseDayHumiditiIncubation -= 1; StartMillis = currentMillis; if (DecreaseDayHumiditiIncubation <= MinimumDecreaseDayHumiditiIncubation)DecreaseDayHumiditiIncubation = MinimumDecreaseDayHumiditiIncubation;           delay(25);  break; }
+                  case 9: {  IncreaseDayHumiditiIncubation -= 1; StartMillis = currentMillis; if (IncreaseDayHumiditiIncubation <= MinimumIncreaseDayHumiditiIncubation)IncreaseDayHumiditiIncubation = MinimumIncreaseDayHumiditiIncubation;           delay(25);  break; }
+                  case 10: { KHumiditiIncubation -= 1; StartMillis = currentMillis; if (KHumiditiIncubation <= MinimumKHumiditiIncubation)KHumiditiIncubation = MinimumKHumiditiIncubation;           delay(25);  break; }
                   case 11: { i--;  if (i < 0)  i = 8;  TimeRotations = RotationPerDay[i];            StartMillis = currentMillis;                                                                                                           delay(25);  break; }
                   case 12: { maxTempFanStart = maxTempFanStart - FadeAmountTemp;                      StartMillis = currentMillis;  if (maxTempFanStart <= maxTempFanStartMenuMin)  maxTempFanStart = maxTempFanStartMenuMin;        delay(25);  break; }
                   case 13: { TimeIntervalFanWork = TimeIntervalFanWork - FadeTimeIntervalFanWork;     StartMillis = currentMillis;  if (TimeIntervalFanWork <= minTimeIntervalFanWork)  TimeIntervalFanWork = minTimeIntervalFanWork;  TimeIntervalFaningInterval = TimeIntervalFanWork * 60000;   delay(25);  break; }
@@ -743,18 +744,18 @@ void loop()
       case 7:  m = 17; break;  // вывод на экран главного меню "1" подменю "7"
       case 8:  m = 18; break;  // вывод на экран главного меню "1" подменю "8"
       case 9:  m = 19; break;  // вывод на экран главного меню "1" подменю "9"
-      case 10:  m = 110; break; // вывод на экран главного меню "1" подменю "10"
-      case 11:  m = 111; break; // вывод на экран главного меню "1" подменю "11"
-      case 12:  m = 112; break; // вывод на экран главного меню "1" подменю "12"
-      case 13:  m = 113; break; // вывод на экран главного меню "1" подменю "13"
-      case 14:  m = 114; break; // вывод на экран главного меню "1" подменю "14"
-      case 15:  m = 115; break; // вывод на экран главного меню "1" подменю "15"
+      case 10:  m = 20; break; // вывод на экран главного меню "1" подменю "10"
+      case 11:  m = 21; break; // вывод на экран главного меню "1" подменю "11"
+      case 12:  m = 22; break; // вывод на экран главного меню "1" подменю "12"
+      case 13:  m = 23; break; // вывод на экран главного меню "1" подменю "13"
+      case 14:  m = 24; break; // вывод на экран главного меню "1" подменю "14"
+      case 15:  m = 25; break; // вывод на экран главного меню "1" подменю "15"
        } 
       break;
     case 2:      // главное меню "2"
       switch (SubMenu) {
-      case 0:  m = 20; break;  // вывод на экран главного меню "2" подменю "0"
-      case 1:  m = 21; break;
+      case 0:  m = 26; break;  // вывод на экран главного меню "2" подменю "0"
+      case 1:  m = 27; break;
       } // вывод на экран главного меню "2" подменю "1"
       break;
     case 3:      // главное меню "3"
@@ -812,14 +813,14 @@ void loop()
   case 17: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("    Delta H     ")); lcd.setCursor(0, 1); lcd.print(F("\4h = ")); lcd.print(deltaHumiditiIncubation); lcd.print("%                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
   case 18: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" Day Decrease H ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(DecreaseDayHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
   case 19: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" Day Increase H ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(IncreaseDayHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
-  case 110: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("     Factor H   ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(KHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
-  case 111: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  Rotate Egg    ")); lcd.setCursor(0, 1);                                  lcd.print(TimeRotations);     lcd.print(" times per day    ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
-  case 112: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   Cooling T    ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(maxTempFanStart);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
-  case 113: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" CO2 faning time")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeFanWork);            lcd.print(" sec. ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
-  case 114: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("CO2 fan interval")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeIntervalFanWork);    lcd.print(" min. ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
-  case 115: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   CO2 faning   ")); lcd.setCursor(0, 1); if (FanWorkFlag == 0) lcd.print("       OFF      "); else if (FanWorkFlag == 1) lcd.print("     IS ON      ");                       PrintMenuWrite(FlagMenu); delay(25);                          break; }
-  case 20: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("  Save setting  ")); lcd.setCursor(0, 2); lcd.print(F("   to  EEPROM   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
-  case 21: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Save setting to ")); lcd.setCursor(0, 1); lcd.print(F("bank ")); lcd.print(bank); if (FlagMenu == 0) { lcd.print(" press set"); delay(25);} else { SaveToEEPROM(bank); lcd.print(" saving...");      delay(25);}                          break; }
+  case 20: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("     Factor H   ")); lcd.setCursor(0, 1); lcd.print(F(" ")); lcd.print(KHumiditiIncubation); lcd.print("                 ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 21: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  Rotate Egg    ")); lcd.setCursor(0, 1);                                  lcd.print(TimeRotations);     lcd.print(" times per day    ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 22: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   Cooling T    ")); lcd.setCursor(0, 1); lcd.print(F("t = ")); lcd.print(maxTempFanStart);        lcd.print("\3                ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 23: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F(" CO2 faning time")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeFanWork);            lcd.print(" sec. ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 24: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("CO2 fan interval")); lcd.setCursor(0, 1); lcd.print(F("time = ")); lcd.print(TimeIntervalFanWork);    lcd.print(" min. ");                                      PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 25: { lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("   CO2 faning   ")); lcd.setCursor(0, 1); if (FanWorkFlag == 0) lcd.print("       OFF      "); else if (FanWorkFlag == 1) lcd.print("     IS ON      ");                       PrintMenuWrite(FlagMenu); delay(25);                          break; }
+  case 26: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("  Save setting  ")); lcd.setCursor(0, 2); lcd.print(F("   to  EEPROM   ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
+  case 27: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Save setting to ")); lcd.setCursor(0, 1); lcd.print(F("bank ")); lcd.print(bank); if (FlagMenu == 0) { lcd.print(" press set"); delay(25);} else { SaveToEEPROM(bank); lcd.print(" saving...");      delay(25);}                          break; }
   case 30: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("  Load setting  ")); lcd.setCursor(0, 2); lcd.print(F("  from  EEPROM  ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
   case 31: {  lcd.clear(); lcd.setCursor(0, 0); lcd.print(F("Load setting from")); lcd.setCursor(0, 1); lcd.print(F("bank ")); lcd.print(bank); if (FlagMenu == 0) { lcd.print(" press set"); delay(25);} else { LoadFromEEPROM(bank); lcd.print(" loading..");    delay(25);}                          break; }
   case 40: {  lcd.clear(); lcd.setCursor(0, 1); lcd.print(F("      Time      ")); lcd.setCursor(0, 2); lcd.print(F("     setting    ")); lcd.setCursor(15, 1);                lcd.print("\1");                                                                                  delay(25);FlagMenu = 0;             break; }
